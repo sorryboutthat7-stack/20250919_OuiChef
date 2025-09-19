@@ -268,7 +268,9 @@ export default function SavedRecipesScreen() {
   );
 
   const renderFolderCard = ({ item }: { item: any }) => {
-    const recipeCount = getRecipesInFolder(item.id).length;
+    const recipesInFolder = getRecipesInFolder(item.id);
+    const recipeCount = recipesInFolder.length;
+    const firstRecipe = recipesInFolder[0];
     
     return (
       <TouchableOpacity 
@@ -276,8 +278,14 @@ export default function SavedRecipesScreen() {
         activeOpacity={0.8}
         onPress={() => handleFolderPress(item)}
       >
-        <View style={[styles.folderThumbnail, { backgroundColor: item.color }]}>
-          <Ionicons name={item.isSmartFolder ? "flash" : "folder"} size={40} color="#fff" />
+        <View style={styles.folderThumbnail}>
+          {firstRecipe && firstRecipe.imageUrl ? (
+            <Image source={{ uri: firstRecipe.imageUrl }} style={styles.folderThumbnailImage} />
+          ) : (
+            <View style={[styles.folderThumbnailFallback, { backgroundColor: item.color }]}>
+              <Ionicons name="restaurant" size={40} color="#999" />
+            </View>
+          )}
           {item.isSmartFolder && (
             <View style={styles.smartFolderBadge}>
               <Ionicons name="flash" size={12} color="#fff" />
@@ -816,9 +824,22 @@ const styles = StyleSheet.create({
     height: 120,
     borderTopLeftRadius: 12,
     borderTopRightRadius: 12,
+    position: 'relative',
+    overflow: 'hidden',
+  },
+  folderThumbnailImage: {
+    width: '100%',
+    height: '100%',
+    borderTopLeftRadius: 12,
+    borderTopRightRadius: 12,
+  },
+  folderThumbnailFallback: {
+    width: '100%',
+    height: '100%',
+    borderTopLeftRadius: 12,
+    borderTopRightRadius: 12,
     justifyContent: 'center',
     alignItems: 'center',
-    position: 'relative',
   },
   smartFolderBadge: {
     position: 'absolute',
