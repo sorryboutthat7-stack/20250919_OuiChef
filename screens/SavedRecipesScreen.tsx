@@ -673,7 +673,7 @@ export default function SavedRecipesScreen() {
         presentationStyle="pageSheet"
         onRequestClose={closeRecipeDetails}
       >
-        <SafeAreaView style={styles.modalContainer}>
+        <SafeAreaView style={styles.recipeModalContainer}>
           <View style={styles.modalHeader}>
             <TouchableOpacity 
               onPress={closeRecipeDetails} 
@@ -687,19 +687,18 @@ export default function SavedRecipesScreen() {
           
           {selectedRecipe && (
             <ScrollView style={styles.modalContent}>
-              {/* Recipe Image */}
               <Image 
                 source={{ uri: selectedRecipe.imageUrl || selectedRecipe.image }} 
-                style={styles.modalImage} 
+                style={styles.recipeModalImage} 
               />
               
-              {/* Recipe Info */}
               <View style={styles.modalInfo}>
-                <Text style={styles.modalRecipeTitle}>{selectedRecipe.title}</Text>
-                <Text style={styles.modalDescription}>{selectedRecipe.description}</Text>
+                <View style={styles.titleDescriptionSection}>
+                  <Text style={styles.modalRecipeTitle}>{selectedRecipe.title}</Text>
+                  <Text style={styles.modalDescription}>{selectedRecipe.description}</Text>
+                </View>
                 
-                {/* Recipe Details */}
-                <View style={styles.modalDetails}>
+                <View style={[styles.modalDetails, styles.detailsWithBackground]}>
                   <View style={styles.modalDetailItemLeft}>
                     <Ionicons name="time-outline" size={16} color="#666" />
                     <Text style={styles.modalDetailText}>
@@ -720,33 +719,34 @@ export default function SavedRecipesScreen() {
                   </View>
                 </View>
                 
-                {/* Serving Size */}
-                <View style={styles.servingSizeRow}>
-                  <Text style={styles.servingSizeTitle}>Serving Size</Text>
-                  <View style={styles.servingSizeButtons}>
-                    <TouchableOpacity 
-                      style={[styles.servingButton, servingMultiplier === 0.5 && styles.activeServingButton]}
-                      onPress={() => handleServingChange(0.5)}
-                    >
-                      <Text style={[styles.servingButtonText, servingMultiplier === 0.5 && styles.activeServingButtonText]}>1/2</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity 
-                      style={[styles.servingButton, servingMultiplier === 1 && styles.activeServingButton]}
-                      onPress={() => handleServingChange(1)}
-                    >
-                      <Text style={[styles.servingButtonText, servingMultiplier === 1 && styles.activeServingButtonText]}>1</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity 
-                      style={[styles.servingButton, servingMultiplier === 2 && styles.activeServingButton]}
-                      onPress={() => handleServingChange(2)}
-                    >
-                      <Text style={[styles.servingButtonText, servingMultiplier === 2 && styles.activeServingButtonText]}>2</Text>
-                    </TouchableOpacity>
+                <View style={styles.servingSizeSection}>
+                  <View style={styles.servingSizeRow}>
+                    <Text style={styles.servingSizeTitle}>Serving Size</Text>
+                    <View style={styles.servingSizeButtons}>
+                      <TouchableOpacity 
+                        style={[styles.servingSizeButton, servingMultiplier === 0.5 && styles.servingSizeButtonActive]}
+                        onPress={() => handleServingChange(0.5)}
+                      >
+                        <Text style={[styles.servingSizeButtonText, servingMultiplier === 0.5 && styles.servingSizeButtonTextActive]}>1/2</Text>
+                      </TouchableOpacity>
+                      <TouchableOpacity 
+                        style={[styles.servingSizeButton, servingMultiplier === 1 && styles.servingSizeButtonActive]}
+                        onPress={() => handleServingChange(1)}
+                      >
+                        <Text style={[styles.servingSizeButtonText, servingMultiplier === 1 && styles.servingSizeButtonTextActive]}>1</Text>
+                      </TouchableOpacity>
+                      <TouchableOpacity 
+                        style={[styles.servingSizeButton, servingMultiplier === 2 && styles.servingSizeButtonActive]}
+                        onPress={() => handleServingChange(2)}
+                      >
+                        <Text style={[styles.servingSizeButtonText, servingMultiplier === 2 && styles.servingSizeButtonTextActive]}>2</Text>
+                      </TouchableOpacity>
+                    </View>
                   </View>
+                  <Text style={styles.servingSizeSubtext}>
+                    Makes {Math.round(4 * servingMultiplier)} servings.
+                  </Text>
                 </View>
-                <Text style={styles.servingSizeSubtext}>
-                  Makes {Math.round(4 * servingMultiplier)} servings.
-                </Text>
                 
                 {/* Ingredients */}
                 <View style={styles.sectionWithBackground}>
@@ -1232,105 +1232,120 @@ const styles = StyleSheet.create({
   activeFilterTagText: {
     color: '#FFFFFF',
   },
-  // Recipe details modal styles
-  modalImage: {
-    width: '100%',
-    height: 200,
-    borderRadius: 12,
-    marginBottom: 20,
-  },
-  modalInfo: {
+  // Recipe details modal styles (matching Recipe Feed screen)
+  recipeModalContainer: {
     flex: 1,
+    backgroundColor: '#f8f9fa',
+  },
+  recipeModalImage: {
+    width: '100%',
+    height: 250,
+    resizeMode: 'cover',
+  },
+  titleDescriptionSection: {
+    backgroundColor: '#fff',
+    borderRadius: 10,
+    padding: 15,
+    marginBottom: 20,
   },
   modalRecipeTitle: {
     fontSize: 24,
-    fontWeight: '700',
     fontFamily: 'Recoleta-Bold',
-    color: '#333333',
-    marginBottom: 8,
+    color: '#333',
+    marginBottom: 10,
   },
   modalDescription: {
     fontSize: 16,
-    lineHeight: 24,
-    fontWeight: '400',
     fontFamily: 'NunitoSans-Regular',
-    color: '#666666',
+    color: '#666',
+    lineHeight: 24,
     marginBottom: 20,
   },
   modalDetails: {
     flexDirection: 'row',
     justifyContent: 'space-between',
+    marginBottom: 30,
+  },
+  detailsWithBackground: {
+    backgroundColor: '#fff',
+    borderRadius: 10,
+    padding: 15,
+  },
+  servingSizeSection: {
+    backgroundColor: '#fff',
+    borderRadius: 10,
+    padding: 15,
     marginBottom: 20,
-  },
-  modalDetailItemLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 5,
-    justifyContent: 'flex-start',
-  },
-  modalDetailItemCenter: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 5,
-    justifyContent: 'center',
-  },
-  modalDetailItemRight: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 5,
-    justifyContent: 'flex-end',
-  },
-  modalDetailText: {
-    fontSize: 14,
-    fontWeight: '600',
-    fontFamily: 'Recoleta-Bold',
-    color: '#333333',
   },
   servingSizeRow: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 8,
+    justifyContent: 'space-between',
   },
   servingSizeTitle: {
     fontSize: 16,
-    fontWeight: '600',
     fontFamily: 'Recoleta-Bold',
-    color: '#333333',
+    color: '#333',
   },
   servingSizeButtons: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
   },
-  servingButton: {
+  servingSizeButton: {
+    backgroundColor: '#f8f9fa',
+    borderRadius: 20,
     paddingHorizontal: 16,
     paddingVertical: 8,
-    borderRadius: 20,
-    borderWidth: 1,
-    borderColor: '#e9ecef',
-    backgroundColor: '#fff',
+    minWidth: 50,
+    alignItems: 'center',
+    borderWidth: 2,
+    borderColor: 'transparent',
   },
-  activeServingButton: {
+  servingSizeButtonActive: {
     backgroundColor: '#FF6B6B',
     borderColor: '#FF6B6B',
   },
-  servingButtonText: {
-    fontSize: 14,
-    fontWeight: '600',
+  servingSizeButtonText: {
+    fontSize: 16,
     fontFamily: 'NunitoSans-SemiBold',
-    color: '#333333',
+    color: '#666',
   },
-  activeServingButtonText: {
+  servingSizeButtonTextActive: {
     color: '#fff',
   },
   servingSizeSubtext: {
     fontSize: 14,
-    fontWeight: '400',
     fontFamily: 'NunitoSans-Regular',
-    color: '#666666',
-    marginBottom: 20,
+    color: '#666',
     textAlign: 'left',
+    marginTop: 8,
+  },
+  modalDetailItemLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    flex: 1,
+    justifyContent: 'flex-start',
+  },
+  modalDetailItemCenter: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    flex: 1,
+    justifyContent: 'center',
+  },
+  modalDetailItemRight: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    flex: 1,
+    justifyContent: 'flex-end',
+  },
+  modalDetailText: {
+    fontSize: 14,
+    fontFamily: 'Recoleta-Bold',
+    color: '#333',
   },
   sectionWithBackground: {
     backgroundColor: '#fff',
