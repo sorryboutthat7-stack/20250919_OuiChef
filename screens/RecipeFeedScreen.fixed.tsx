@@ -14,6 +14,7 @@ import {
   ScrollView,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useFocusEffect } from '@react-navigation/native';
 import { useRecipeStore } from '../state/recipeStore.fixed';
 import GPTService from '../services/gptService';
 import ImageService from '../services/imageService';
@@ -289,6 +290,17 @@ export default function RecipeFeedScreen() {
   useEffect(() => {
     loadRecipes();
   }, [pantryItems, filters]);
+
+  // Regenerate recipes when user navigates back to this tab
+  useFocusEffect(
+    React.useCallback(() => {
+      // Only regenerate if we have pantry items or filters that might have changed
+      if (pantryItems.length > 0 || Object.values(filters).some(value => value && value !== '')) {
+        console.log('🔄 Tab focused - regenerating recipes based on current pantry/filters');
+        loadRecipes();
+      }
+    }, [pantryItems, filters])
+  );
 
   const loadRecipes = async () => {
     setLoading(true);
