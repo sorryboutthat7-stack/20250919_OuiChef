@@ -496,6 +496,73 @@ export default function RecipeFeedScreen() {
     setServingMultiplier(multiplier);
   };
 
+  // Function to format quantities as fractions when possible
+  const formatQuantityAsFraction = (value: number): string => {
+    // If it's a whole number, return as is
+    if (value % 1 === 0) {
+      return value.toString();
+    }
+
+    // Common fractions to check for
+    const commonFractions = [
+      { decimal: 0.125, fraction: '1/8' },
+      { decimal: 0.25, fraction: '1/4' },
+      { decimal: 0.33, fraction: '1/3' },
+      { decimal: 0.375, fraction: '3/8' },
+      { decimal: 0.5, fraction: '1/2' },
+      { decimal: 0.625, fraction: '5/8' },
+      { decimal: 0.67, fraction: '2/3' },
+      { decimal: 0.75, fraction: '3/4' },
+      { decimal: 0.875, fraction: '7/8' },
+    ];
+
+    // Check for exact matches with common fractions
+    for (const { decimal, fraction } of commonFractions) {
+      if (Math.abs(value - decimal) < 0.01) {
+        return fraction;
+      }
+    }
+
+    // For values greater than 1, try to separate whole and fractional parts
+    if (value > 1) {
+      const wholePart = Math.floor(value);
+      const fractionalPart = value - wholePart;
+      
+      // Check if the fractional part matches a common fraction
+      for (const { decimal, fraction } of commonFractions) {
+        if (Math.abs(fractionalPart - decimal) < 0.01) {
+          return `${wholePart} ${fraction}`;
+        }
+      }
+      
+      // If no common fraction matches, use decimal for fractional part
+      if (fractionalPart > 0.01) {
+        return `${wholePart} ${fractionalPart.toFixed(2).replace(/\.00$/, '').replace(/\.0$/, '')}`;
+      }
+      
+      return wholePart.toString();
+    }
+
+    // For values less than 1, try to find the closest common fraction
+    let closestFraction = '';
+    let smallestDiff = Infinity;
+    
+    for (const { decimal, fraction } of commonFractions) {
+      const diff = Math.abs(value - decimal);
+      if (diff < smallestDiff && diff < 0.1) { // Only if reasonably close
+        smallestDiff = diff;
+        closestFraction = fraction;
+      }
+    }
+    
+    if (closestFraction) {
+      return closestFraction;
+    }
+
+    // Fallback to decimal with 2 decimal places, removing trailing zeros
+    return value.toFixed(2).replace(/\.00$/, '').replace(/\.0$/, '');
+  };
+
   // Function to scale ingredient quantities based on serving size
   const scaleIngredientQuantity = (ingredient: string, multiplier: number): string => {
     if (multiplier === 1) return ingredient; // No scaling needed for 1x serving
@@ -531,20 +598,8 @@ export default function RecipeFeedScreen() {
         // Scale the value
         const scaledValue = value * multiplier;
 
-        // Format the result
-        if (type === 'fraction' || (type === 'decimal' && scaledValue < 1)) {
-          // For small values, try to convert to fractions
-          if (Math.abs(scaledValue - 0.5) < 0.01) return '1/2';
-          if (Math.abs(scaledValue - 0.25) < 0.01) return '1/4';
-          if (Math.abs(scaledValue - 0.75) < 0.01) return '3/4';
-          if (Math.abs(scaledValue - 0.33) < 0.01) return '1/3';
-          if (Math.abs(scaledValue - 0.67) < 0.01) return '2/3';
-          // If no common fraction matches, use decimal
-          return scaledValue.toFixed(1).replace(/\.0$/, '');
-        } else {
-          // For larger values, use whole numbers or one decimal place
-          return scaledValue % 1 === 0 ? scaledValue.toString() : scaledValue.toFixed(1);
-        }
+        // Format the result - prefer fractions over decimals
+        return formatQuantityAsFraction(scaledValue);
       });
     });
 
