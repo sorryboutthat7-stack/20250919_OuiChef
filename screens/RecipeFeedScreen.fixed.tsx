@@ -286,27 +286,74 @@ export default function RecipeFeedScreen() {
   const [selectedRecipe, setSelectedRecipe] = useState<any>(null);
   const [modalVisible, setModalVisible] = useState(false);
   const [servingMultiplier, setServingMultiplier] = useState(1);
+  
+  // Track previous state to detect changes
+  const [previousPantryItems, setPreviousPantryItems] = useState<any[]>([]);
+  const [previousFilters, setPreviousFilters] = useState<any>({});
+
+  // Function to check if pantry items have changed
+  const pantryItemsChanged = (current: any[], previous: any[]): boolean => {
+    if (current.length !== previous.length) return true;
+    
+    // Compare each item by id and name
+    return current.some((item, index) => {
+      const prevItem = previous[index];
+      return !prevItem || item.id !== prevItem.id || item.name !== prevItem.name;
+    });
+  };
+
+  // Function to check if filters have changed
+  const filtersChanged = (current: any, previous: any): boolean => {
+    const currentKeys = Object.keys(current);
+    const previousKeys = Object.keys(previous);
+    
+    if (currentKeys.length !== previousKeys.length) return true;
+    
+    return currentKeys.some(key => current[key] !== previous[key]);
+  };
 
   useEffect(() => {
     loadRecipes();
   }, [pantryItems, filters]);
 
-  // Regenerate recipes when user navigates back to this tab
+  // Initialize previous state on first load
+  useEffect(() => {
+    if (previousPantryItems.length === 0 && previousFilters && Object.keys(previousFilters).length === 0) {
+      setPreviousPantryItems([...pantryItems]);
+      setPreviousFilters({...filters});
+    }
+  }, [pantryItems, filters, previousPantryItems, previousFilters]);
+
+  // Regenerate recipes when user navigates back to this tab (only if changes detected)
   useFocusEffect(
     React.useCallback(() => {
-      // Only regenerate if we have pantry items or filters that might have changed
-      if (pantryItems.length > 0 || Object.values(filters).some(value => value && value !== '')) {
-        console.log('🔄 Tab focused - regenerating recipes based on current pantry/filters');
+      // Check if pantry items or filters have actually changed
+      const pantryChanged = pantryItemsChanged(pantryItems, previousPantryItems);
+      const filterChanged = filtersChanged(filters, previousFilters);
+      
+      if (pantryChanged || filterChanged) {
+        console.log('🔄 Tab focused - changes detected, regenerating recipes', {
+          pantryChanged,
+          filterChanged,
+          pantryItems: pantryItems.length,
+          filters: Object.keys(filters).filter(k => filters[k])
+        });
         
         // Clear old recipes and show loading state
         setRecipes([]);
         setCurrentIndex(0);
         setLoading(true);
         
+        // Update previous state to current state
+        setPreviousPantryItems([...pantryItems]);
+        setPreviousFilters({...filters});
+        
         // Generate new recipes
         loadRecipes();
+      } else {
+        console.log('📱 Tab focused - no changes detected, keeping current recipes');
       }
-    }, [pantryItems, filters])
+    }, [pantryItems, filters, previousPantryItems, previousFilters])
   );
 
   const loadRecipes = async () => {
