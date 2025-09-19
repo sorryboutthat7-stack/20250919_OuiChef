@@ -108,6 +108,11 @@ export default function SavedRecipesScreen() {
   const [selectedFolder, setSelectedFolder] = useState<any>(null);
   const [showFolderRecipes, setShowFolderRecipes] = useState(false);
   
+  // Recipe details modal state
+  const [selectedRecipe, setSelectedRecipe] = useState<any>(null);
+  const [showRecipeDetails, setShowRecipeDetails] = useState(false);
+  const [servingMultiplier, setServingMultiplier] = useState(1);
+  
   // Smart folder filter state
   const [smartFolderName, setSmartFolderName] = useState('');
   const [smartFolderFilters, setSmartFolderFilters] = useState<string[]>([]);
@@ -233,8 +238,31 @@ export default function SavedRecipesScreen() {
     );
   };
 
+  // Handle recipe tap to show details
+  const handleRecipeTap = (recipe: any) => {
+    setSelectedRecipe(recipe);
+    setShowRecipeDetails(true);
+    setServingMultiplier(1); // Reset serving multiplier
+  };
+
+  // Close recipe details modal
+  const closeRecipeDetails = () => {
+    setShowRecipeDetails(false);
+    setSelectedRecipe(null);
+    setServingMultiplier(1);
+  };
+
+  // Handle serving size change
+  const handleServingChange = (multiplier: number) => {
+    setServingMultiplier(multiplier);
+  };
+
   const renderRecipeCard = ({ item }: { item: any }) => (
-    <TouchableOpacity style={styles.recipeCard} activeOpacity={0.8}>
+    <TouchableOpacity 
+      style={styles.recipeCard} 
+      activeOpacity={0.8}
+      onPress={() => handleRecipeTap(item)}
+    >
       <Image source={{ uri: item.imageUrl || item.image }} style={styles.recipeImage} />
       
       {/* Heart icon in top right */}
@@ -635,6 +663,113 @@ export default function SavedRecipesScreen() {
               </View>
             )}
           </View>
+        </SafeAreaView>
+      </Modal>
+
+      {/* Recipe Details Modal */}
+      <Modal
+        visible={showRecipeDetails}
+        animationType="slide"
+        presentationStyle="pageSheet"
+        onRequestClose={closeRecipeDetails}
+      >
+        <SafeAreaView style={styles.modalContainer}>
+          <View style={styles.modalHeader}>
+            <TouchableOpacity 
+              onPress={closeRecipeDetails} 
+              style={styles.closeButton}
+            >
+              <Ionicons name="close" size={24} color="#333" />
+            </TouchableOpacity>
+            <Text style={styles.modalTitle}>Recipe Details</Text>
+            <View style={styles.placeholder} />
+          </View>
+          
+          {selectedRecipe && (
+            <ScrollView style={styles.modalContent}>
+              {/* Recipe Image */}
+              <Image 
+                source={{ uri: selectedRecipe.imageUrl || selectedRecipe.image }} 
+                style={styles.modalImage} 
+              />
+              
+              {/* Recipe Info */}
+              <View style={styles.modalInfo}>
+                <Text style={styles.modalRecipeTitle}>{selectedRecipe.title}</Text>
+                <Text style={styles.modalDescription}>{selectedRecipe.description}</Text>
+                
+                {/* Recipe Details */}
+                <View style={styles.modalDetails}>
+                  <View style={styles.modalDetailItemLeft}>
+                    <Ionicons name="time-outline" size={16} color="#666" />
+                    <Text style={styles.modalDetailText}>
+                      {selectedRecipe.cookTime || selectedRecipe.cook_time || '30 min'}
+                    </Text>
+                  </View>
+                  <View style={styles.modalDetailItemCenter}>
+                    <Ionicons name="trending-up-outline" size={16} color="#666" />
+                    <Text style={styles.modalDetailText}>
+                      {selectedRecipe.difficulty || 'Medium'}
+                    </Text>
+                  </View>
+                  <View style={styles.modalDetailItemRight}>
+                    <Ionicons name="flame-outline" size={16} color="#666" />
+                    <Text style={styles.modalDetailText}>
+                      {selectedRecipe.calories || '400 cal'}
+                    </Text>
+                  </View>
+                </View>
+                
+                {/* Serving Size */}
+                <View style={styles.servingSizeRow}>
+                  <Text style={styles.servingSizeTitle}>Serving Size</Text>
+                  <View style={styles.servingSizeButtons}>
+                    <TouchableOpacity 
+                      style={[styles.servingButton, servingMultiplier === 0.5 && styles.activeServingButton]}
+                      onPress={() => handleServingChange(0.5)}
+                    >
+                      <Text style={[styles.servingButtonText, servingMultiplier === 0.5 && styles.activeServingButtonText]}>1/2</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity 
+                      style={[styles.servingButton, servingMultiplier === 1 && styles.activeServingButton]}
+                      onPress={() => handleServingChange(1)}
+                    >
+                      <Text style={[styles.servingButtonText, servingMultiplier === 1 && styles.activeServingButtonText]}>1</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity 
+                      style={[styles.servingButton, servingMultiplier === 2 && styles.activeServingButton]}
+                      onPress={() => handleServingChange(2)}
+                    >
+                      <Text style={[styles.servingButtonText, servingMultiplier === 2 && styles.activeServingButtonText]}>2</Text>
+                    </TouchableOpacity>
+                  </View>
+                </View>
+                <Text style={styles.servingSizeSubtext}>
+                  Makes {Math.round(4 * servingMultiplier)} servings.
+                </Text>
+                
+                {/* Ingredients */}
+                <View style={styles.sectionWithBackground}>
+                  <Text style={styles.sectionTitle}>Ingredients</Text>
+                  {selectedRecipe.ingredients?.map((ingredient: string, index: number) => (
+                    <Text key={index} style={styles.ingredientText}>
+                      • {ingredient}
+                    </Text>
+                  ))}
+                </View>
+                
+                {/* Instructions */}
+                <View style={styles.sectionWithBackground}>
+                  <Text style={styles.sectionTitle}>Instructions</Text>
+                  {selectedRecipe.instructions?.map((instruction: string, index: number) => (
+                    <Text key={index} style={styles.instructionText}>
+                      {index + 1}. {instruction}
+                    </Text>
+                  ))}
+                </View>
+              </View>
+            </ScrollView>
+          )}
         </SafeAreaView>
       </Modal>
     </SafeAreaView>
@@ -1096,6 +1231,135 @@ const styles = StyleSheet.create({
   },
   activeFilterTagText: {
     color: '#FFFFFF',
+  },
+  // Recipe details modal styles
+  modalImage: {
+    width: '100%',
+    height: 200,
+    borderRadius: 12,
+    marginBottom: 20,
+  },
+  modalInfo: {
+    flex: 1,
+  },
+  modalRecipeTitle: {
+    fontSize: 24,
+    fontWeight: '700',
+    fontFamily: 'Recoleta-Bold',
+    color: '#333333',
+    marginBottom: 8,
+  },
+  modalDescription: {
+    fontSize: 16,
+    lineHeight: 24,
+    fontWeight: '400',
+    fontFamily: 'NunitoSans-Regular',
+    color: '#666666',
+    marginBottom: 20,
+  },
+  modalDetails: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 20,
+  },
+  modalDetailItemLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    justifyContent: 'flex-start',
+  },
+  modalDetailItemCenter: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    justifyContent: 'center',
+  },
+  modalDetailItemRight: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    justifyContent: 'flex-end',
+  },
+  modalDetailText: {
+    fontSize: 14,
+    fontWeight: '600',
+    fontFamily: 'Recoleta-Bold',
+    color: '#333333',
+  },
+  servingSizeRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  servingSizeTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    fontFamily: 'Recoleta-Bold',
+    color: '#333333',
+  },
+  servingSizeButtons: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  servingButton: {
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: '#e9ecef',
+    backgroundColor: '#fff',
+  },
+  activeServingButton: {
+    backgroundColor: '#FF6B6B',
+    borderColor: '#FF6B6B',
+  },
+  servingButtonText: {
+    fontSize: 14,
+    fontWeight: '600',
+    fontFamily: 'NunitoSans-SemiBold',
+    color: '#333333',
+  },
+  activeServingButtonText: {
+    color: '#fff',
+  },
+  servingSizeSubtext: {
+    fontSize: 14,
+    fontWeight: '400',
+    fontFamily: 'NunitoSans-Regular',
+    color: '#666666',
+    marginBottom: 20,
+    textAlign: 'left',
+  },
+  sectionWithBackground: {
+    backgroundColor: '#fff',
+    borderRadius: 10,
+    padding: 15,
+    marginBottom: 15,
+  },
+  sectionTitle: {
+    fontSize: 18,
+    fontWeight: '700',
+    fontFamily: 'Recoleta-Bold',
+    color: '#333333',
+    marginBottom: 12,
+  },
+  ingredientText: {
+    fontSize: 16,
+    lineHeight: 24,
+    fontWeight: '400',
+    fontFamily: 'NunitoSans-Regular',
+    color: '#333333',
+    marginBottom: 8,
+  },
+  instructionText: {
+    fontSize: 16,
+    lineHeight: 24,
+    fontWeight: '400',
+    fontFamily: 'NunitoSans-Regular',
+    color: '#333333',
+    marginBottom: 12,
   },
   // Ingredient input styles
   ingredientInputContainer: {
