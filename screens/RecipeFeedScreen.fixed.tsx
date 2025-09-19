@@ -1093,16 +1093,14 @@ export default function RecipeFeedScreen() {
                 </View>
 
                 {/* Save Recipe Button */}
-                <View style={styles.saveButtonContainer}>
-                  <TouchableOpacity 
-                    style={styles.saveButton}
-                    onPress={handleSaveRecipe}
-                    activeOpacity={0.8}
-                  >
-                    <Ionicons name="heart" size={20} color="#FFFFFF" style={styles.saveButtonIcon} />
-                    <Text style={styles.saveButtonText}>Save Recipe</Text>
-                  </TouchableOpacity>
-                </View>
+                <TouchableOpacity 
+                  style={styles.saveButton}
+                  onPress={handleSaveRecipe}
+                  activeOpacity={0.8}
+                >
+                  <Ionicons name="heart" size={20} color="#FFFFFF" style={styles.saveButtonIcon} />
+                  <Text style={styles.saveButtonText}>Save Recipe</Text>
+                </TouchableOpacity>
               </View>
             </ScrollView>
             </>
@@ -1658,10 +1656,6 @@ const styles = StyleSheet.create({
     opacity: 0.9,
   },
   // Save button styles
-  saveButtonContainer: {
-    padding: 20,
-    backgroundColor: '#FFFFFF',
-  },
   saveButton: {
     backgroundColor: '#FF6B6B',
     flexDirection: 'row',
@@ -1669,6 +1663,8 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     paddingVertical: 16,
     paddingHorizontal: 24,
+    marginHorizontal: 20,
+    marginVertical: 20,
     borderRadius: 12,
     shadowColor: '#000',
     shadowOffset: {
