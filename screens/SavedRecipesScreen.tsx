@@ -202,13 +202,14 @@ export default function SavedRecipesScreen() {
         onPress={() => handleFolderPress(item)}
       >
         <View style={[styles.folderThumbnail, { backgroundColor: item.color }]}>
-          <Ionicons name="folder" size={30} color="#fff" />
+          <Ionicons name="folder" size={40} color="#fff" />
         </View>
         <View style={styles.folderInfo}>
-          <Text style={styles.folderName}>{item.name}</Text>
+          <Text style={styles.folderName} numberOfLines={2}>
+            {item.name}
+          </Text>
           <Text style={styles.folderCount}>{recipeCount} recipes</Text>
         </View>
-        <Ionicons name="chevron-forward" size={20} color="#666" />
       </TouchableOpacity>
     );
   };
@@ -284,11 +285,13 @@ export default function SavedRecipesScreen() {
             
             {folders.length > 0 ? (
               <FlatList
-                key="folders-list"
+                key="folders-grid"
                 data={folders}
                 renderItem={renderFolderCard}
                 keyExtractor={(item) => item.id}
-                contentContainerStyle={styles.foldersListContainer}
+                numColumns={2}
+                columnWrapperStyle={styles.row}
+                contentContainerStyle={styles.gridContainer}
                 showsVerticalScrollIndicator={false}
               />
             ) : (
@@ -619,16 +622,11 @@ const styles = StyleSheet.create({
     color: '#FF6B6B',
     marginLeft: 8,
   },
-  foldersListContainer: {
-    flexGrow: 1,
-  },
   folderCard: {
     backgroundColor: '#fff',
     borderRadius: 12,
-    padding: 16,
-    marginBottom: 12,
-    flexDirection: 'row',
-    alignItems: 'center',
+    marginBottom: 16,
+    width: '48%',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
@@ -636,15 +634,25 @@ const styles = StyleSheet.create({
     elevation: 3,
   },
   folderThumbnail: {
-    width: 60,
-    height: 60,
-    borderRadius: 8,
+    width: '100%',
+    height: 120,
+    borderTopLeftRadius: 12,
+    borderTopRightRadius: 12,
     justifyContent: 'center',
     alignItems: 'center',
   },
   folderInfo: {
+    padding: 12,
     flex: 1,
-    marginLeft: 16,
+    justifyContent: 'space-between',
+  },
+  folderName: {
+    fontSize: 16,
+    lineHeight: 22,
+    fontWeight: '600',
+    fontFamily: 'NunitoSans-SemiBold',
+    color: '#333333',
+    marginBottom: 8,
   },
   folderCount: {
     fontSize: 12,
@@ -652,7 +660,6 @@ const styles = StyleSheet.create({
     fontWeight: '400',
     fontFamily: 'NunitoSans-Regular',
     color: '#666666',
-    marginTop: 4,
   },
   // Recently Viewed Cards
   recentContainer: {
