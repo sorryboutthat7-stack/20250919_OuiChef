@@ -974,6 +974,7 @@ export default function RecipeFeedScreen() {
           </View>
           
           {selectedRecipe && (
+            <>
             <ScrollView style={styles.modalContent}>
               <Image source={{ uri: selectedRecipe.imageUrl }} style={styles.modalImage} />
               
@@ -1096,6 +1097,7 @@ export default function RecipeFeedScreen() {
                 <Text style={styles.saveButtonText}>Save Recipe</Text>
               </TouchableOpacity>
             </View>
+            </>
           )}
         </SafeAreaView>
       </Modal>
