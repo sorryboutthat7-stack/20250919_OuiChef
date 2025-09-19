@@ -1237,8 +1237,8 @@ const styles = StyleSheet.create({
   missingIngredientsSubText: {
     fontSize: 12,
     lineHeight: 18,
-    fontWeight: '600',
-    fontFamily: 'NunitoSans-SemiBold',
+    fontWeight: '700',
+    fontFamily: 'NunitoSans-Bold',
     color: '#F57C00',
     opacity: 0.8,
   },
