@@ -563,6 +563,14 @@ export default function RecipeFeedScreen() {
     setServingMultiplier(multiplier);
   };
 
+  // Function to clean ingredient name for display (remove preparation methods)
+  const cleanIngredientForDisplay = (ingredient: string): string => {
+    return ingredient
+      .replace(/,\s*(diced|chopped|sliced|minced|grated|shredded|crushed|halved|quartered|julienned|cubed|strips|rings|wedges|chunks|bits|pieces|optional).*$/i, '') // Remove preparation methods at end
+      .replace(/\s+(diced|chopped|sliced|minced|grated|shredded|crushed|halved|quartered|julienned|cubed|strips|rings|wedges|chunks|bits|pieces|optional).*$/i, '') // Remove preparation methods
+      .trim();
+  };
+
   // Function to determine missing ingredients by comparing recipe with pantry
   const getMissingIngredients = (recipeIngredients: string[], pantryItems: any[]): string[] => {
     console.log('🔍 getMissingIngredients called with:', {
@@ -610,7 +618,9 @@ export default function RecipeFeedScreen() {
       console.log(`🔍 Ingredient: "${ingredient}" -> Clean: "${cleanIngredient}" -> Has: ${hasIngredient}`);
       
       if (!hasIngredient) {
-        missingIngredients.push(ingredient);
+        // Use cleaned ingredient name for display (without preparation methods)
+        const displayIngredient = cleanIngredientForDisplay(ingredient);
+        missingIngredients.push(displayIngredient);
       }
     });
 
