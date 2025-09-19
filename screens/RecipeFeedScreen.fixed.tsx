@@ -451,7 +451,7 @@ export default function RecipeFeedScreen() {
           
           return {
             ...recipe,
-            id: recipe.id || `gpt-${index}`,
+            id: recipe.id || `gpt-${Date.now()}-${index}`,
             imageUrl,
             cookTime: recipe.cook_time || '30 min',
             instructions: recipe.steps || [],
@@ -776,12 +776,27 @@ export default function RecipeFeedScreen() {
 
   const currentRecipe = recipes[currentIndex];
   const nextRecipe = recipes[currentIndex + 1];
+  
+  // Safety check - ensure we have valid recipes
+  if (!currentRecipe) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <View style={styles.loadingContainer}>
+          <Image 
+            source={require('../assets/animations/coral_outline.gif')} 
+            style={styles.loadingGif}
+          />
+          <Text style={styles.loadingText}>Loading recipes...</Text>
+        </View>
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.cardContainer}>
         {/* Background Card */}
-        {nextRecipe && (
+        {nextRecipe && nextRecipe.id && (
           <SwipeableRecipeCard
             key={`background-${nextRecipe.id}`}
             recipe={nextRecipe}
@@ -794,7 +809,7 @@ export default function RecipeFeedScreen() {
 
         {/* Top Card */}
         <SwipeableRecipeCard
-          key={`top-${currentRecipe.id}`}
+          key={`top-${currentRecipe.id || 'current'}`}
           recipe={currentRecipe}
           isTopCard={true}
           onLike={() => handleLike(currentRecipe)}
