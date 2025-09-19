@@ -335,50 +335,50 @@ export default function SavedRecipesScreen() {
           />
         );
       case 'folders':
+        // Create combined data with new folder buttons first
+        const newFolderButtons = [
+          { id: 'new-folder', type: 'new-folder', name: 'New Folder', color: '#FF6B6B' },
+          { id: 'new-smart-folder', type: 'new-smart-folder', name: 'New Smart Folder', color: '#4CAF50' }
+        ];
+        const combinedData = [...newFolderButtons, ...folders];
+        
         return (
-          <View style={styles.foldersContainer}>
-            {/* New Folder Buttons */}
-            <View style={styles.newFolderButtonsContainer}>
-              <TouchableOpacity 
-                style={[styles.newFolderButton, styles.regularFolderButton]}
-                onPress={() => setShowNewFolderModal(true)}
-                activeOpacity={0.8}
-              >
-                <Ionicons name="add" size={40} color="#FF6B6B" />
-                <Text style={styles.newFolderButtonText}>New Folder</Text>
-              </TouchableOpacity>
-              
-              <TouchableOpacity 
-                style={[styles.newFolderButton, styles.smartFolderButton]}
-                onPress={() => setShowNewSmartFolderModal(true)}
-                activeOpacity={0.8}
-              >
-                <Ionicons name="flash" size={40} color="#4CAF50" />
-                <Text style={[styles.newFolderButtonText, { color: '#4CAF50' }]}>New Smart Folder</Text>
-              </TouchableOpacity>
-            </View>
-            
-            {folders.length > 0 ? (
-              <FlatList
-                key="folders-grid"
-                data={folders}
-                renderItem={renderFolderCard}
-                keyExtractor={(item) => item.id}
-                numColumns={2}
-                columnWrapperStyle={styles.row}
-                contentContainerStyle={styles.gridContainer}
-                showsVerticalScrollIndicator={false}
-              />
-            ) : (
-              <View style={styles.emptyState}>
-                <Ionicons name="folder-outline" size={80} color="#FF6B6B" />
-                <Text style={styles.emptyStateTitle}>No Folders Yet</Text>
-                <Text style={styles.emptyStateSubtitle}>
-                  Create folders to organize your saved recipes by category or cuisine!
-                </Text>
-              </View>
-            )}
-          </View>
+          <FlatList
+            key="folders-grid"
+            data={combinedData}
+            renderItem={({ item }) => {
+              if (item.type === 'new-folder') {
+                return (
+                  <TouchableOpacity 
+                    style={[styles.newFolderButton, styles.regularFolderButton]}
+                    onPress={() => setShowNewFolderModal(true)}
+                    activeOpacity={0.8}
+                  >
+                    <Ionicons name="add" size={16} color="#FF6B6B" />
+                    <Text style={styles.newFolderButtonText}>New Folder</Text>
+                  </TouchableOpacity>
+                );
+              } else if (item.type === 'new-smart-folder') {
+                return (
+                  <TouchableOpacity 
+                    style={[styles.newFolderButton, styles.smartFolderButton]}
+                    onPress={() => setShowNewSmartFolderModal(true)}
+                    activeOpacity={0.8}
+                  >
+                    <Ionicons name="flash" size={16} color="#4CAF50" />
+                    <Text style={[styles.newFolderButtonText, { color: '#4CAF50' }]}>New Smart Folder</Text>
+                  </TouchableOpacity>
+                );
+              } else {
+                return renderFolderCard({ item });
+              }
+            }}
+            keyExtractor={(item) => item.id}
+            numColumns={2}
+            columnWrapperStyle={styles.row}
+            contentContainerStyle={styles.gridContainer}
+            showsVerticalScrollIndicator={false}
+          />
         );
       case 'recent':
         return (
@@ -781,15 +781,11 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: 20,
   },
-  newFolderButtonsContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 16,
-  },
   newFolderButton: {
     backgroundColor: '#fff',
     borderRadius: 12,
     width: '48%',
+    height: 20,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
@@ -797,9 +793,10 @@ const styles = StyleSheet.create({
     elevation: 3,
     borderWidth: 2,
     borderStyle: 'dashed',
-    paddingVertical: 20,
+    flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
+    paddingHorizontal: 8,
   },
   regularFolderButton: {
     borderColor: '#FF6B6B',
@@ -808,12 +805,11 @@ const styles = StyleSheet.create({
     borderColor: '#4CAF50',
   },
   newFolderButtonText: {
-    fontSize: 14,
+    fontSize: 12,
     fontWeight: '600',
     fontFamily: 'NunitoSans-SemiBold',
     color: '#FF6B6B',
-    marginTop: 8,
-    textAlign: 'center',
+    marginLeft: 6,
   },
   folderCard: {
     backgroundColor: '#fff',
