@@ -78,24 +78,6 @@ const mockFolders = [
   },
 ];
 
-const mockRecentlyViewed = [
-  {
-    id: '1',
-    title: 'Mediterranean Quinoa Bowl',
-    author: 'Chef Maria',
-    cookTime: '22 min',
-    image: 'https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=300&h=200&fit=crop',
-    viewedAt: '2 hours ago',
-  },
-  {
-    id: '2',
-    title: 'Chicken Tikka Masala',
-    author: 'Chef Raj',
-    cookTime: '35 min',
-    image: 'https://images.unsplash.com/photo-1563379091339-03246963d96a?w=300&h=200&fit=crop',
-    viewedAt: '1 day ago',
-  },
-];
 
 type TabType = 'saved' | 'folders' | 'recent';
 
@@ -107,6 +89,30 @@ export default function SavedRecipesScreen() {
   const [newFolderName, setNewFolderName] = useState('');
   const [selectedFolder, setSelectedFolder] = useState<any>(null);
   const [showFolderRecipes, setShowFolderRecipes] = useState(false);
+  
+  // Get recently viewed recipes from store
+  const { getRecentlyViewed } = useRecipeStore();
+  const recentlyViewed = getRecentlyViewed();
+
+  // Function to format time ago
+  const formatTimeAgo = (dateString: string): string => {
+    const now = new Date();
+    const viewedAt = new Date(dateString);
+    const diffInSeconds = Math.floor((now.getTime() - viewedAt.getTime()) / 1000);
+    
+    if (diffInSeconds < 60) {
+      return 'Just now';
+    } else if (diffInSeconds < 3600) {
+      const minutes = Math.floor(diffInSeconds / 60);
+      return `${minutes} minute${minutes > 1 ? 's' : ''} ago`;
+    } else if (diffInSeconds < 86400) {
+      const hours = Math.floor(diffInSeconds / 3600);
+      return `${hours} hour${hours > 1 ? 's' : ''} ago`;
+    } else {
+      const days = Math.floor(diffInSeconds / 86400);
+      return `${days} day${days > 1 ? 's' : ''} ago`;
+    }
+  };
   
   // Recipe details modal state
   const [selectedRecipe, setSelectedRecipe] = useState<any>(null);
@@ -128,7 +134,7 @@ export default function SavedRecipesScreen() {
   };
   
   // Get saved recipes and folders from global store
-  const { savedRecipes, removeRecipe, folders, getRecipesInFolder, addFolder, pantryItems } = useRecipeStore();
+  const { savedRecipes, removeRecipe, folders, getRecipesInFolder, addFolder, pantryItems, addToRecentlyViewed } = useRecipeStore();
 
   // Filter recipes based on search query
   const filteredSavedRecipes = savedRecipes.filter(recipe => {
@@ -240,6 +246,9 @@ export default function SavedRecipesScreen() {
 
   // Handle recipe tap to show details
   const handleRecipeTap = (recipe: any) => {
+    // Add recipe to recently viewed
+    addToRecentlyViewed(recipe);
+    
     // Calculate missing ingredients dynamically when modal opens
     const missingIngredients = getMissingIngredients(recipe.ingredients || [], pantryItems);
     const recipeWithMissingIngredients = {
@@ -539,17 +548,21 @@ export default function SavedRecipesScreen() {
   };
 
   const renderRecentlyViewedCard = ({ item }: { item: any }) => (
-    <TouchableOpacity style={styles.recentCard} activeOpacity={0.8}>
-      <Image source={{ uri: item.image }} style={styles.recentImage} />
+    <TouchableOpacity 
+      style={styles.recentCard} 
+      activeOpacity={0.8}
+      onPress={() => handleRecipeTap(item)}
+    >
+      <Image source={{ uri: item.imageUrl || item.image }} style={styles.recentImage} />
       <View style={styles.recentInfo}>
         <Text style={styles.recentTitle} numberOfLines={2}>
           {item.title}
         </Text>
-        <Text style={styles.recentAuthor}>{item.author}</Text>
+        <Text style={styles.recentAuthor}>{item.cuisine}</Text>
         <View style={styles.recentMetadata}>
           <Ionicons name="time-outline" size={14} color="#666" />
-          <Text style={styles.recentCookTime}>{item.cookTime}</Text>
-          <Text style={styles.recentViewedAt}>{item.viewedAt}</Text>
+          <Text style={styles.recentCookTime}>{item.cookTime || item.cook_time}</Text>
+          <Text style={styles.recentViewedAt}>{formatTimeAgo(item.viewedAt)}</Text>
         </View>
       </View>
     </TouchableOpacity>
@@ -641,10 +654,22 @@ export default function SavedRecipesScreen() {
           />
         );
       case 'recent':
+        if (recentlyViewed.length === 0) {
+          return (
+            <View style={styles.emptyState}>
+              <Ionicons name="time-outline" size={80} color="#FF6B6B" />
+              <Text style={styles.emptyStateTitle}>No Recently Viewed Recipes</Text>
+              <Text style={styles.emptyStateSubtitle}>
+                Tap on recipe cards in the Find Recipes tab to view recipe details and build your recently viewed list!
+              </Text>
+            </View>
+          );
+        }
+        
         return (
           <FlatList
             key="recent-list"
-            data={mockRecentlyViewed}
+            data={recentlyViewed}
             renderItem={renderRecentlyViewedCard}
             keyExtractor={(item) => item.id}
             contentContainerStyle={styles.recentContainer}

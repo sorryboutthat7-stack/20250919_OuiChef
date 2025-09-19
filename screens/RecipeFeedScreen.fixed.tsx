@@ -292,7 +292,7 @@ function SwipeableRecipeCard({
 }
 
 export default function RecipeFeedScreen() {
-  const { pantryItems, filters, addRecipe } = useRecipeStore();
+  const { pantryItems, filters, addRecipe, addToRecentlyViewed } = useRecipeStore();
   const [recipes, setRecipes] = useState<any[]>([]);
   const [savedRecipes, setSavedRecipes] = useState<string[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -516,6 +516,9 @@ export default function RecipeFeedScreen() {
   };
 
   const handleRecipeTap = (recipe: any) => {
+    // Add recipe to recently viewed
+    addToRecentlyViewed(recipe);
+    
     // Calculate missing ingredients dynamically when modal opens
     const missingIngredients = getMissingIngredients(recipe.ingredients || [], pantryItems);
     const recipeWithMissingIngredients = {

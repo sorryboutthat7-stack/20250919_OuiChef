@@ -42,6 +42,23 @@ interface RecipeFolder {
   };
 }
 
+interface RecentlyViewedRecipe {
+  id: string;
+  title: string;
+  description: string;
+  ingredients: string[];
+  steps: string[];
+  cook_time: string;
+  cuisine: string;
+  image_tag: string;
+  imageUrl?: string;
+  cookTime?: string;
+  difficulty?: string;
+  calories?: string;
+  instructions?: string[];
+  viewedAt: string;
+}
+
 interface RecipeStore {
   savedRecipes: AppRecipe[];
   currentRecipeBatch: AppRecipe[];
@@ -49,6 +66,7 @@ interface RecipeStore {
   pantryItems: PantryItem[];
   filters: RecipeFilters;
   folders: RecipeFolder[];
+  recentlyViewed: RecentlyViewedRecipe[];
   addRecipe: (recipe: AppRecipe) => void;
   removeRecipe: (recipeId: string) => void;
   isRecipeSaved: (recipeId: string) => boolean;
@@ -65,6 +83,9 @@ interface RecipeStore {
   updateFolder: (folderId: string, updates: Partial<RecipeFolder>) => void;
   assignRecipeToFolder: (recipeId: string, folderId: string | null) => void;
   getRecipesInFolder: (folderId: string) => AppRecipe[];
+  // Recently viewed methods
+  addToRecentlyViewed: (recipe: AppRecipe) => void;
+  getRecentlyViewed: () => RecentlyViewedRecipe[];
 }
 
 export const useRecipeStore = create<RecipeStore>((set, get) => ({
@@ -92,6 +113,7 @@ export const useRecipeStore = create<RecipeStore>((set, get) => ({
     { id: '3', name: 'Comfort Food', color: '#FF9800', createdAt: new Date().toISOString() },
     { id: '4', name: 'Desserts', color: '#9C27B0', createdAt: new Date().toISOString() },
   ],
+  recentlyViewed: [],
   
   addRecipe: (recipe: AppRecipe) => {
     set((state) => ({
@@ -255,5 +277,37 @@ export const useRecipeStore = create<RecipeStore>((set, get) => ({
     return state.savedRecipes.filter(recipe => 
       recipe.folderIds?.includes(folderId) || false
     );
+  },
+  
+  // Recently viewed methods
+  addToRecentlyViewed: (recipe: AppRecipe) => {
+    set((state) => {
+      const now = new Date().toISOString();
+      const recentlyViewedRecipe: RecentlyViewedRecipe = {
+        ...recipe,
+        viewedAt: now,
+        imageUrl: recipe.imageUrl || '',
+        cookTime: recipe.cookTime || recipe.cook_time,
+        difficulty: recipe.difficulty || 'Medium',
+        calories: recipe.calories || '400 cal',
+        instructions: recipe.instructions || recipe.steps,
+      };
+      
+      // Remove existing entry if it exists (to avoid duplicates)
+      const filteredRecentlyViewed = state.recentlyViewed.filter(item => item.id !== recipe.id);
+      
+      // Add to beginning of array (most recent first)
+      const newRecentlyViewed = [recentlyViewedRecipe, ...filteredRecentlyViewed];
+      
+      // Keep only the 10 most recent
+      return {
+        recentlyViewed: newRecentlyViewed.slice(0, 10)
+      };
+    });
+  },
+  
+  getRecentlyViewed: () => {
+    const state = get();
+    return state.recentlyViewed;
   },
 }));
