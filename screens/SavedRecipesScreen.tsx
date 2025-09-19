@@ -100,7 +100,6 @@ type TabType = 'saved' | 'folders' | 'recent';
 export default function SavedRecipesScreen() {
   const [activeTab, setActiveTab] = useState<TabType>('saved');
   const [searchQuery, setSearchQuery] = useState('');
-  const [showSearch, setShowSearch] = useState(false);
   
   // Get saved recipes from global store
   const { savedRecipes, removeRecipe } = useRecipeStore();
@@ -219,36 +218,22 @@ export default function SavedRecipesScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
-      {/* Header */}
-      <View style={styles.header}>
-        <Text style={styles.headerTitle}>My Meals</Text>
+      {/* Search Bar */}
+      <View style={styles.searchContainer}>
+        <TextInput
+          style={styles.searchInput}
+          placeholder="Search your saved recipes..."
+          placeholderTextColor="#999"
+          value={searchQuery}
+          onChangeText={setSearchQuery}
+        />
         <TouchableOpacity
-          style={styles.searchButton}
-          onPress={() => setShowSearch(!showSearch)}
-          activeOpacity={0.7}
+          style={styles.searchCloseButton}
+          onPress={() => setSearchQuery('')}
         >
-          <Ionicons name="search-outline" size={24} color="#FF6B6B" />
+          <Ionicons name="close" size={20} color="#666" />
         </TouchableOpacity>
       </View>
-
-      {/* Search Bar */}
-      {showSearch && (
-        <View style={styles.searchContainer}>
-          <TextInput
-            style={styles.searchInput}
-            placeholder="Search your saved recipes..."
-            placeholderTextColor="#999"
-            value={searchQuery}
-            onChangeText={setSearchQuery}
-          />
-          <TouchableOpacity
-            style={styles.searchCloseButton}
-            onPress={() => setShowSearch(false)}
-          >
-            <Ionicons name="close" size={20} color="#666" />
-          </TouchableOpacity>
-        </View>
-      )}
 
       {/* Sub-navigation Tabs */}
       <View style={styles.tabContainer}>
@@ -292,29 +277,11 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#f8f9fa',
   },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: 20,
-    paddingVertical: 16,
-    backgroundColor: '#f8f9fa',
-  },
-  headerTitle: {
-    fontSize: 32,
-    lineHeight: 38,
-    fontWeight: 'bold',
-    fontFamily: 'Recoleta-Bold',
-    color: '#333333',
-  },
-  searchButton: {
-    padding: 8,
-  },
   searchContainer: {
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: 20,
-    paddingBottom: 16,
+    paddingVertical: 16,
     backgroundColor: '#f8f9fa',
   },
   searchInput: {
