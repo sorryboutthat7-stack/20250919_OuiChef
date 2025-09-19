@@ -9,6 +9,8 @@ import {
   Image,
   FlatList,
   TextInput,
+  Modal,
+  Alert,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useRecipeStore } from '../state/recipeStore.fixed';
@@ -100,9 +102,13 @@ type TabType = 'saved' | 'folders' | 'recent';
 export default function SavedRecipesScreen() {
   const [activeTab, setActiveTab] = useState<TabType>('saved');
   const [searchQuery, setSearchQuery] = useState('');
+  const [showNewFolderModal, setShowNewFolderModal] = useState(false);
+  const [newFolderName, setNewFolderName] = useState('');
+  const [selectedFolder, setSelectedFolder] = useState<any>(null);
+  const [showFolderRecipes, setShowFolderRecipes] = useState(false);
   
   // Get saved recipes and folders from global store
-  const { savedRecipes, removeRecipe, folders, getRecipesInFolder } = useRecipeStore();
+  const { savedRecipes, removeRecipe, folders, getRecipesInFolder, addFolder } = useRecipeStore();
 
   // Filter recipes based on search query
   const filteredSavedRecipes = savedRecipes.filter(recipe => {
@@ -117,6 +123,40 @@ export default function SavedRecipesScreen() {
            description.includes(searchTerm) || 
            ingredients.includes(searchTerm);
   });
+
+  // Create new folder
+  const handleCreateFolder = () => {
+    if (!newFolderName.trim()) {
+      Alert.alert('Error', 'Please enter a folder name');
+      return;
+    }
+    
+    const colors = ['#FF6B6B', '#4CAF50', '#FF9800', '#9C27B0', '#2196F3', '#E91E63', '#795548', '#607D8B'];
+    const randomColor = colors[Math.floor(Math.random() * colors.length)];
+    
+    const newFolder = {
+      id: Date.now().toString(),
+      name: newFolderName.trim(),
+      color: randomColor,
+      createdAt: new Date().toISOString(),
+    };
+    
+    addFolder(newFolder);
+    setNewFolderName('');
+    setShowNewFolderModal(false);
+  };
+
+  // Handle folder selection
+  const handleFolderPress = (folder: any) => {
+    setSelectedFolder(folder);
+    setShowFolderRecipes(true);
+  };
+
+  // Close folder recipes view
+  const closeFolderRecipes = () => {
+    setShowFolderRecipes(false);
+    setSelectedFolder(null);
+  };
 
   const renderRecipeCard = ({ item }: { item: any }) => (
     <TouchableOpacity style={styles.recipeCard} activeOpacity={0.8}>
@@ -156,7 +196,11 @@ export default function SavedRecipesScreen() {
     const recipeCount = getRecipesInFolder(item.id).length;
     
     return (
-      <TouchableOpacity style={styles.folderCard} activeOpacity={0.8}>
+      <TouchableOpacity 
+        style={styles.folderCard} 
+        activeOpacity={0.8}
+        onPress={() => handleFolderPress(item)}
+      >
         <View style={[styles.folderThumbnail, { backgroundColor: item.color }]}>
           <Ionicons name="folder" size={30} color="#fff" />
         </View>
@@ -226,22 +270,36 @@ export default function SavedRecipesScreen() {
           />
         );
       case 'folders':
-        return folders.length > 0 ? (
-          <FlatList
-            key="folders-list"
-            data={folders}
-            renderItem={renderFolderCard}
-            keyExtractor={(item) => item.id}
-            contentContainerStyle={styles.foldersContainer}
-            showsVerticalScrollIndicator={false}
-          />
-        ) : (
-          <View style={styles.emptyState}>
-            <Ionicons name="folder-outline" size={80} color="#FF6B6B" />
-            <Text style={styles.emptyStateTitle}>No Folders Yet</Text>
-            <Text style={styles.emptyStateSubtitle}>
-              Create folders to organize your saved recipes by category or cuisine!
-            </Text>
+        return (
+          <View style={styles.foldersContainer}>
+            {/* New Folder Button */}
+            <TouchableOpacity 
+              style={styles.newFolderButton}
+              onPress={() => setShowNewFolderModal(true)}
+              activeOpacity={0.8}
+            >
+              <Ionicons name="add" size={24} color="#FF6B6B" />
+              <Text style={styles.newFolderButtonText}>New Folder</Text>
+            </TouchableOpacity>
+            
+            {folders.length > 0 ? (
+              <FlatList
+                key="folders-list"
+                data={folders}
+                renderItem={renderFolderCard}
+                keyExtractor={(item) => item.id}
+                contentContainerStyle={styles.foldersListContainer}
+                showsVerticalScrollIndicator={false}
+              />
+            ) : (
+              <View style={styles.emptyState}>
+                <Ionicons name="folder-outline" size={80} color="#FF6B6B" />
+                <Text style={styles.emptyStateTitle}>No Folders Yet</Text>
+                <Text style={styles.emptyStateSubtitle}>
+                  Create folders to organize your saved recipes by category or cuisine!
+                </Text>
+              </View>
+            )}
           </View>
         );
       case 'recent':
@@ -316,6 +374,90 @@ export default function SavedRecipesScreen() {
 
       {/* Content */}
       {renderContent()}
+
+      {/* New Folder Modal */}
+      <Modal
+        visible={showNewFolderModal}
+        animationType="slide"
+        presentationStyle="pageSheet"
+        onRequestClose={() => setShowNewFolderModal(false)}
+      >
+        <SafeAreaView style={styles.modalContainer}>
+          <View style={styles.modalHeader}>
+            <TouchableOpacity 
+              onPress={() => setShowNewFolderModal(false)} 
+              style={styles.closeButton}
+            >
+              <Ionicons name="close" size={24} color="#333" />
+            </TouchableOpacity>
+            <Text style={styles.modalTitle}>New Folder</Text>
+            <View style={styles.placeholder} />
+          </View>
+          
+          <View style={styles.modalContent}>
+            <Text style={styles.modalLabel}>Folder Name</Text>
+            <TextInput
+              style={styles.modalInput}
+              placeholder="Enter folder name..."
+              placeholderTextColor="#999"
+              value={newFolderName}
+              onChangeText={setNewFolderName}
+              autoFocus
+            />
+            
+            <TouchableOpacity 
+              style={styles.createButton}
+              onPress={handleCreateFolder}
+              activeOpacity={0.8}
+            >
+              <Text style={styles.createButtonText}>Create Folder</Text>
+            </TouchableOpacity>
+          </View>
+        </SafeAreaView>
+      </Modal>
+
+      {/* Folder Recipes Modal */}
+      <Modal
+        visible={showFolderRecipes}
+        animationType="slide"
+        presentationStyle="pageSheet"
+        onRequestClose={closeFolderRecipes}
+      >
+        <SafeAreaView style={styles.modalContainer}>
+          <View style={styles.modalHeader}>
+            <TouchableOpacity 
+              onPress={closeFolderRecipes} 
+              style={styles.closeButton}
+            >
+              <Ionicons name="close" size={24} color="#333" />
+            </TouchableOpacity>
+            <Text style={styles.modalTitle}>{selectedFolder?.name}</Text>
+            <View style={styles.placeholder} />
+          </View>
+          
+          <View style={styles.modalContent}>
+            {selectedFolder && getRecipesInFolder(selectedFolder.id).length > 0 ? (
+              <FlatList
+                data={getRecipesInFolder(selectedFolder.id)}
+                renderItem={renderRecipeCard}
+                keyExtractor={(item) => item.id}
+                numColumns={2}
+                columnWrapperStyle={styles.row}
+                contentContainerStyle={styles.gridContainer}
+                showsVerticalScrollIndicator={false}
+              />
+            ) : (
+              <View style={styles.emptyState}>
+                <Ionicons name="folder-open-outline" size={80} color="#FF6B6B" />
+                <Text style={styles.emptyStateTitle}>No Recipes Yet</Text>
+                <Text style={styles.emptyStateSubtitle}>
+                  Add recipes to this folder to organize your collection!
+                </Text>
+              </View>
+            )}
+          </View>
+        </SafeAreaView>
+      </Modal>
     </SafeAreaView>
   );
 }
@@ -455,7 +597,30 @@ const styles = StyleSheet.create({
   },
   // Folder Cards
   foldersContainer: {
+    flex: 1,
     padding: 20,
+  },
+  newFolderButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#fff',
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 16,
+    borderWidth: 2,
+    borderColor: '#FF6B6B',
+    borderStyle: 'dashed',
+  },
+  newFolderButtonText: {
+    fontSize: 16,
+    fontWeight: '600',
+    fontFamily: 'NunitoSans-SemiBold',
+    color: '#FF6B6B',
+    marginLeft: 8,
+  },
+  foldersListContainer: {
+    flexGrow: 1,
   },
   folderCard: {
     backgroundColor: '#fff',
@@ -605,5 +770,67 @@ const styles = StyleSheet.create({
     fontFamily: 'NunitoSans-Regular',
     color: '#666666',
     textAlign: 'center',
+  },
+  // Modal styles
+  modalContainer: {
+    flex: 1,
+    backgroundColor: '#f8f9fa',
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+    paddingVertical: 16,
+    backgroundColor: '#f8f9fa',
+    borderBottomWidth: 1,
+    borderBottomColor: '#e9ecef',
+  },
+  closeButton: {
+    padding: 8,
+  },
+  modalTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    fontFamily: 'Recoleta-Bold',
+    color: '#333333',
+  },
+  placeholder: {
+    width: 40,
+  },
+  modalContent: {
+    flex: 1,
+    padding: 20,
+  },
+  modalLabel: {
+    fontSize: 16,
+    fontWeight: '600',
+    fontFamily: 'NunitoSans-SemiBold',
+    color: '#333333',
+    marginBottom: 8,
+  },
+  modalInput: {
+    backgroundColor: '#fff',
+    borderRadius: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    fontSize: 16,
+    fontFamily: 'NunitoSans-Regular',
+    color: '#333333',
+    borderWidth: 1,
+    borderColor: '#e9ecef',
+    marginBottom: 24,
+  },
+  createButton: {
+    backgroundColor: '#FF6B6B',
+    borderRadius: 12,
+    paddingVertical: 16,
+    alignItems: 'center',
+  },
+  createButtonText: {
+    fontSize: 16,
+    fontWeight: '600',
+    fontFamily: 'NunitoSans-SemiBold',
+    color: '#fff',
   },
 });

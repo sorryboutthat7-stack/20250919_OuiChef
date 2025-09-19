@@ -24,7 +24,7 @@ interface AppRecipe {
   cook_time: string;
   cuisine: string;
   image_tag: string;
-  folderId?: string; // Optional folder assignment
+  folderIds?: string[]; // Multiple folder assignments
 }
 
 interface RecipeFolder {
@@ -163,9 +163,10 @@ export const useRecipeStore = create<RecipeStore>((set, get) => ({
     set((state) => ({
       folders: state.folders.filter(folder => folder.id !== folderId),
       // Remove folder assignment from recipes
-      savedRecipes: state.savedRecipes.map(recipe => 
-        recipe.folderId === folderId ? { ...recipe, folderId: undefined } : recipe
-      ),
+      savedRecipes: state.savedRecipes.map(recipe => ({
+        ...recipe,
+        folderIds: recipe.folderIds?.filter(id => id !== folderId) || []
+      })),
     }));
   },
   
@@ -177,16 +178,33 @@ export const useRecipeStore = create<RecipeStore>((set, get) => ({
     }));
   },
   
-  assignRecipeToFolder: (recipeId: string, folderId: string | null) => {
+  assignRecipeToFolder: (recipeId: string, folderId: string, assign: boolean) => {
     set((state) => ({
-      savedRecipes: state.savedRecipes.map(recipe =>
-        recipe.id === recipeId ? { ...recipe, folderId: folderId || undefined } : recipe
-      ),
+      savedRecipes: state.savedRecipes.map(recipe => {
+        if (recipe.id !== recipeId) return recipe;
+        
+        const currentFolderIds = recipe.folderIds || [];
+        let newFolderIds;
+        
+        if (assign) {
+          // Add folder if not already assigned
+          newFolderIds = currentFolderIds.includes(folderId) 
+            ? currentFolderIds 
+            : [...currentFolderIds, folderId];
+        } else {
+          // Remove folder
+          newFolderIds = currentFolderIds.filter(id => id !== folderId);
+        }
+        
+        return { ...recipe, folderIds: newFolderIds };
+      }),
     }));
   },
   
   getRecipesInFolder: (folderId: string) => {
     const state = get();
-    return state.savedRecipes.filter(recipe => recipe.folderId === folderId);
+    return state.savedRecipes.filter(recipe => 
+      recipe.folderIds?.includes(folderId) || false
+    );
   },
 }));
