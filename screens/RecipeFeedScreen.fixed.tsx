@@ -1079,7 +1079,7 @@ export default function RecipeFeedScreen() {
                 <View style={[styles.section, styles.sectionWithBackground]}>
                   <Text style={styles.sectionTitle}>Instructions</Text>
                   {(selectedRecipe.instructions || []).map((instruction: string, index: number) => (
-                    <Text key={index} style={styles.instructionText}>{instruction}</Text>
+                    <Text key={index} style={styles.instructionText}>Step {index + 1}. {instruction}</Text>
                   ))}
                 </View>
               </View>
