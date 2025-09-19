@@ -1229,15 +1229,15 @@ const styles = StyleSheet.create({
   missingIngredientsMainText: {
     fontSize: 15,
     lineHeight: 22,
-    fontWeight: '800',
-    fontFamily: 'NunitoSans-Bold',
+    fontWeight: '900',
+    fontFamily: 'Recoleta-Bold',
     color: '#F57C00',
     marginBottom: 4,
   },
   missingIngredientsSubText: {
     fontSize: 12,
     lineHeight: 18,
-    fontWeight: '700',
+    fontWeight: '800',
     fontFamily: 'NunitoSans-Bold',
     color: '#F57C00',
     opacity: 0.8,
