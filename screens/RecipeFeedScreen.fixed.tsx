@@ -404,7 +404,7 @@ export default function RecipeFeedScreen() {
             instructions: recipe.steps || [],
             difficulty: recipe.difficulty || 'Medium',
             calories: recipe.calories || '400 cal',
-            missingIngredients: getMissingIngredients(recipe.ingredients || [], pantryItems)
+            missingIngredients: [] // Will be calculated dynamically when modal opens
           };
         })
       );
@@ -451,7 +451,7 @@ export default function RecipeFeedScreen() {
             instructions: recipe.steps || [],
             difficulty: recipe.difficulty || 'Medium',
             calories: recipe.calories || '400 cal',
-            missingIngredients: getMissingIngredients(recipe.ingredients || [], pantryItems)
+            missingIngredients: [] // Will be calculated dynamically when modal opens
           };
         })
       );
@@ -480,7 +480,21 @@ export default function RecipeFeedScreen() {
   };
 
   const handleRecipeTap = (recipe: any) => {
-    setSelectedRecipe(recipe);
+    // Calculate missing ingredients dynamically when modal opens
+    const missingIngredients = getMissingIngredients(recipe.ingredients || [], pantryItems);
+    const recipeWithMissingIngredients = {
+      ...recipe,
+      missingIngredients
+    };
+    
+    console.log('🔍 Recipe tapped, calculated missing ingredients:', {
+      recipe: recipe.title,
+      ingredients: recipe.ingredients,
+      pantryItems: pantryItems.map(item => item.name),
+      missingIngredients
+    });
+    
+    setSelectedRecipe(recipeWithMissingIngredients);
     setModalVisible(true);
   };
 
