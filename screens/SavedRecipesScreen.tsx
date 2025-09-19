@@ -220,19 +220,23 @@ export default function SavedRecipesScreen() {
     <SafeAreaView style={styles.container}>
       {/* Search Bar */}
       <View style={styles.searchContainer}>
-        <TextInput
-          style={styles.searchInput}
-          placeholder="Search your saved recipes..."
-          placeholderTextColor="#999"
-          value={searchQuery}
-          onChangeText={setSearchQuery}
-        />
-        <TouchableOpacity
-          style={styles.searchCloseButton}
-          onPress={() => setSearchQuery('')}
-        >
-          <Ionicons name="close" size={20} color="#666" />
-        </TouchableOpacity>
+        <View style={styles.searchInputContainer}>
+          <TextInput
+            style={styles.searchInput}
+            placeholder="Search your saved recipes..."
+            placeholderTextColor="#999"
+            value={searchQuery}
+            onChangeText={setSearchQuery}
+          />
+          {searchQuery.length > 0 && (
+            <TouchableOpacity
+              style={styles.searchCloseButton}
+              onPress={() => setSearchQuery('')}
+            >
+              <Ionicons name="close" size={20} color="#666" />
+            </TouchableOpacity>
+          )}
+        </View>
       </View>
 
       {/* Sub-navigation Tabs */}
@@ -278,29 +282,33 @@ const styles = StyleSheet.create({
     backgroundColor: '#f8f9fa',
   },
   searchContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
     paddingHorizontal: 20,
     paddingVertical: 16,
     backgroundColor: '#f8f9fa',
   },
-  searchInput: {
-    flex: 1,
+  searchInputContainer: {
+    position: 'relative',
     backgroundColor: '#fff',
     borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#e9ecef',
+  },
+  searchInput: {
     paddingHorizontal: 16,
     paddingVertical: 12,
+    paddingRight: 50, // Make room for the close button
     fontSize: 16,
     lineHeight: 24,
     fontWeight: '400',
     fontFamily: 'NunitoSans-Regular',
     color: '#333333',
-    borderWidth: 1,
-    borderColor: '#e9ecef',
   },
   searchCloseButton: {
-    marginLeft: 12,
-    padding: 8,
+    position: 'absolute',
+    right: 12,
+    top: '50%',
+    transform: [{ translateY: -10 }], // Center vertically
+    padding: 4,
   },
   tabContainer: {
     flexDirection: 'row',
