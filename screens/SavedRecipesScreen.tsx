@@ -1238,7 +1238,6 @@ const styles = StyleSheet.create({
   },
   modalContent: {
     flex: 1,
-    padding: 20,
   },
   modalLabel: {
     fontSize: 16,
@@ -1329,6 +1328,10 @@ const styles = StyleSheet.create({
     width: '100%',
     height: 250,
     resizeMode: 'cover',
+  },
+  modalInfo: {
+    flex: 1,
+    padding: 20,
   },
   titleDescriptionSection: {
     backgroundColor: '#fff',
