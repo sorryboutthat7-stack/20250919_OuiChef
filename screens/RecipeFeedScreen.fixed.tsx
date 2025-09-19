@@ -404,8 +404,7 @@ export default function RecipeFeedScreen() {
             instructions: recipe.steps || [],
             difficulty: recipe.difficulty || 'Medium',
             calories: recipe.calories || '400 cal',
-            missingIngredients: index === 0 ? ['Olive oil', 'Fresh basil', 'Parmesan cheese'] : 
-                               index === 1 ? ['Garlic', 'Red wine'] : []
+            missingIngredients: getMissingIngredients(recipe.ingredients || [], pantryItems)
           };
         })
       );
@@ -452,8 +451,7 @@ export default function RecipeFeedScreen() {
             instructions: recipe.steps || [],
             difficulty: recipe.difficulty || 'Medium',
             calories: recipe.calories || '400 cal',
-            missingIngredients: index === 0 ? ['Olive oil', 'Fresh basil', 'Parmesan cheese'] : 
-                               index === 1 ? ['Garlic', 'Red wine'] : []
+            missingIngredients: getMissingIngredients(recipe.ingredients || [], pantryItems)
           };
         })
       );
@@ -494,6 +492,53 @@ export default function RecipeFeedScreen() {
 
   const handleServingChange = (multiplier: number) => {
     setServingMultiplier(multiplier);
+  };
+
+  // Function to determine missing ingredients by comparing recipe with pantry
+  const getMissingIngredients = (recipeIngredients: string[], pantryItems: any[]): string[] => {
+    if (!recipeIngredients || recipeIngredients.length === 0) return [];
+    if (!pantryItems || pantryItems.length === 0) return recipeIngredients;
+
+    const pantryNames = pantryItems.map(item => item.name.toLowerCase().trim());
+    const missingIngredients: string[] = [];
+
+    recipeIngredients.forEach(ingredient => {
+      // Extract the main ingredient name (remove quantities and measurements)
+      const ingredientText = ingredient.toLowerCase().trim();
+      
+      // Remove common quantity patterns to get the core ingredient name
+      const cleanIngredient = ingredientText
+        .replace(/^\d+\/\d+\s+/, '') // Remove fractions like "1/2 "
+        .replace(/^\d+\.\d+\s+/, '') // Remove decimals like "1.5 "
+        .replace(/^\d+\s+/, '') // Remove whole numbers like "2 "
+        .replace(/^(cup|cups|tbsp|tsp|oz|lb|pound|pounds|clove|cloves|slice|slices|can|cans|bag|bags|bunch|bunches|head|heads|piece|pieces|dash|pinch|handful)\s+/, '') // Remove measurements
+        .replace(/\s+(cup|cups|tbsp|tsp|oz|lb|pound|pounds|clove|cloves|slice|slices|can|cans|bag|bags|bunch|bunches|head|heads|piece|pieces|dash|pinch|handful)$/, '') // Remove measurements at end
+        .replace(/,\s*(diced|chopped|sliced|minced|grated|shredded|crushed|whole|fresh|dried|frozen|canned|raw|cooked|optional).*$/, '') // Remove preparation methods
+        .replace(/\s+(diced|chopped|sliced|minced|grated|shredded|crushed|whole|fresh|dried|frozen|canned|raw|cooked|optional).*$/, '') // Remove preparation methods
+        .trim();
+
+      // Check if any pantry item matches this ingredient
+      const hasIngredient = pantryNames.some(pantryName => {
+        // Direct match
+        if (pantryName === cleanIngredient) return true;
+        
+        // Check if pantry item contains the ingredient or vice versa
+        if (pantryName.includes(cleanIngredient) || cleanIngredient.includes(pantryName)) return true;
+        
+        // Check for common variations (plural/singular, different forms)
+        const pantrySingular = pantryName.replace(/s$/, '');
+        const ingredientSingular = cleanIngredient.replace(/s$/, '');
+        if (pantrySingular === ingredientSingular) return true;
+        
+        return false;
+      });
+
+      if (!hasIngredient) {
+        missingIngredients.push(ingredient);
+      }
+    });
+
+    return missingIngredients;
   };
 
   // Function to format quantities as fractions when possible
@@ -746,22 +791,38 @@ export default function RecipeFeedScreen() {
                 </View>
 
                 {/* Missing Ingredients Section */}
-                <View style={[styles.section, styles.missingIngredientsBanner]}>
-                  <View style={styles.missingIngredientsContent}>
-                    <View style={styles.missingIngredientsLeft}>
-                      <Ionicons name="warning-outline" size={20} color="#F57C00" style={styles.missingIngredientsIcon} />
-                      <View style={styles.missingIngredientsTextContainer}>
-                        <Text style={styles.missingIngredientsMainText}>Missing Ingredients</Text>
-                        <Text style={styles.missingIngredientsSubText}>
-                          {selectedRecipe.missingIngredients && selectedRecipe.missingIngredients.length > 0 
-                            ? selectedRecipe.missingIngredients.join(', ')
-                            : 'Olive oil, Fresh basil, Parmesan cheese'
-                          }
-                        </Text>
+                {selectedRecipe.missingIngredients && selectedRecipe.missingIngredients.length > 0 && (
+                  <View style={[styles.section, styles.missingIngredientsBanner]}>
+                    <View style={styles.missingIngredientsContent}>
+                      <View style={styles.missingIngredientsLeft}>
+                        <Ionicons name="warning-outline" size={20} color="#F57C00" style={styles.missingIngredientsIcon} />
+                        <View style={styles.missingIngredientsTextContainer}>
+                          <Text style={styles.missingIngredientsMainText}>Missing Ingredients</Text>
+                          <Text style={styles.missingIngredientsSubText}>
+                            {selectedRecipe.missingIngredients.join(', ')}
+                          </Text>
+                        </View>
                       </View>
                     </View>
                   </View>
-                </View>
+                )}
+
+                {/* All Ingredients Available Section */}
+                {(!selectedRecipe.missingIngredients || selectedRecipe.missingIngredients.length === 0) && (
+                  <View style={[styles.section, styles.allIngredientsBanner]}>
+                    <View style={styles.missingIngredientsContent}>
+                      <View style={styles.missingIngredientsLeft}>
+                        <Ionicons name="checkmark-circle-outline" size={20} color="#4CAF50" style={styles.missingIngredientsIcon} />
+                        <View style={styles.missingIngredientsTextContainer}>
+                          <Text style={[styles.missingIngredientsMainText, { color: '#4CAF50' }]}>All Ingredients Available</Text>
+                          <Text style={[styles.missingIngredientsSubText, { color: '#4CAF50' }]}>
+                            You have everything needed for this recipe!
+                          </Text>
+                        </View>
+                      </View>
+                    </View>
+                  </View>
+                )}
 
                 <View style={[styles.section, styles.sectionWithBackground]}>
                   <Text style={styles.sectionTitle}>Ingredients</Text>
@@ -1102,6 +1163,15 @@ const styles = StyleSheet.create({
   },
   missingIngredientsBanner: {
     backgroundColor: '#FFF8E1',
+    borderRadius: 12,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  allIngredientsBanner: {
+    backgroundColor: '#E8F5E8', // Light green
     borderRadius: 12,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
