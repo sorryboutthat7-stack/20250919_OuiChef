@@ -50,7 +50,14 @@ export class GPTService {
           messages: [
             {
               role: 'system',
-              content: `You are a professional sous chef writing training cards for new cooks. Generate exactly 3 recipes in valid JSON format. Each recipe must be practical, delicious, and use mostly the provided pantry ingredients. Only suggest 2-3 additional ingredients if absolutely essential. For ingredients and instructions, be concise but clear - write as if training a new cook. IMPORTANT: Return ONLY valid JSON, no markdown formatting, no backticks, no extra text.`
+              content: `You are a professional sous chef writing training cards for new cooks. Generate exactly 3 recipes in valid JSON format. Each recipe must be practical, delicious, and use mostly the provided pantry ingredients. Only suggest 2-3 additional ingredients if absolutely essential. 
+
+CRITICAL CHARACTER LIMITS:
+- Recipe title: Maximum 120 characters
+- Recipe description: Maximum 280 characters (for recipe details modal)
+- Keep ingredients and instructions concise but clear
+
+IMPORTANT: Return ONLY valid JSON, no markdown formatting, no backticks, no extra text.`
             },
             {
               role: 'user',
@@ -63,7 +70,12 @@ export class GPTService {
       });
 
       if (!response.ok) {
-        throw new Error(`OpenAI API error: ${response.status}`);
+        const errorText = await response.text();
+        console.error('OpenAI API Error Details:', errorText);
+        if (response.status === 401) {
+          throw new Error('OpenAI API key is invalid or expired. Please check your API key.');
+        }
+        throw new Error(`OpenAI API error: ${response.status} - ${errorText}`);
       }
 
       const data = await response.json();
@@ -119,11 +131,21 @@ export class GPTService {
       }
 
       console.log('✅ Successfully parsed recipes:', recipeResponse.recipes.length);
-      return recipeResponse.recipes;
+      
+      // Post-process recipes to enforce character limits
+      const processedRecipes = recipeResponse.recipes.map(recipe => ({
+        ...recipe,
+        title: recipe.title.length > 120 ? recipe.title.substring(0, 117) + '...' : recipe.title,
+        description: recipe.description.length > 280 ? recipe.description.substring(0, 277) + '...' : recipe.description
+      }));
+      
+      return processedRecipes;
     } catch (error) {
       console.error('Error generating recipes with GPT:', error);
       // Return fallback recipes if GPT fails
-      return this.getFallbackRecipes(pantryItems, options);
+      const fallbackRecipes = this.getFallbackRecipes(pantryItems, options);
+      console.log('Using fallback recipes:', fallbackRecipes.length);
+      return fallbackRecipes;
     }
   }
 
@@ -160,19 +182,12 @@ IMPORTANT INGREDIENT RULES:
       prompt += ` Make all recipes ${options.dietary}.`;
     }
     
-         prompt += `\n\nIMPORTANT REQUIREMENTS:
-     - Each recipe must have a detailed, appetizing description (2-3 sentences)
-     - For ingredients and instructions, use this specific format:
+         prompt += `\n\nCRITICAL CHARACTER LIMITS:
+     - Recipe title: Maximum 120 characters (for recipe card display)
+     - Recipe description: Maximum 280 characters (for recipe details modal)
+     - Keep ingredients and instructions concise but clear
      
-     You are a sous chef writing a training card for a new cook. 
-     From the recipe JSON below, generate exactly two new fields:
-     
-     "ingredients": [list of concise but clear ingredients],
-     "method": [numbered step-by-step instructions, concise but not overly concise].
-     
-     Return strictly valid JSON with only those two keys.
-     
-     Respond with valid JSON in this exact format:\n{\n  "recipes": [\n    {\n      "title": "Recipe Title",\n      "description": "Detailed description explaining what the dish is, its flavors, and why it's delicious. Make it appetizing and informative.",\n      "ingredients": ["2 cups pasta", "1/2 onion, diced", "3 cloves garlic, minced"],\n      "steps": ["Step 1: Detailed cooking instruction", "Step 2: Next cooking step", "Step 3: Final preparation step"],\n      "cook_time": "X minutes",\n      "cuisine": "cuisine type",\n      "image_tag": "descriptive food photo tag"\n    }\n  ]\n}`;
+     Respond with valid JSON in this exact format:\n{\n  "recipes": [\n    {\n      "title": "Recipe Title (max 120 chars)",\n      "description": "Brief description explaining the dish, its flavors, and why it's delicious. Keep under 280 characters.",\n      "ingredients": ["2 cups pasta", "1/2 onion, diced", "3 cloves garlic, minced"],\n      "steps": ["Step 1: Detailed cooking instruction", "Step 2: Next cooking step", "Step 3: Final preparation step"],\n      "cook_time": "X minutes",\n      "cuisine": "cuisine type",\n      "image_tag": "descriptive food photo tag"\n    }\n  ]\n}`;
     
     return prompt;
   }
@@ -184,7 +199,7 @@ IMPORTANT INGREDIENT RULES:
     return [
       {
         title: "Quick Pantry Pasta",
-        description: `A delicious and simple pasta dish that makes the most of your pantry ingredients. This comforting meal combines ${pantryNames} with perfectly cooked pasta for a satisfying dinner that's ready in just 20 minutes. The combination of fresh vegetables and al dente pasta creates a wholesome, flavorful dish that's perfect for busy weeknights.`,
+        description: `A delicious and simple pasta dish using ${pantryNames}. Ready in 20 minutes with perfectly cooked pasta and fresh vegetables for a wholesome, flavorful meal.`,
         ingredients: [
           "2 cups pasta (any type)",
           "1/2 cup olive oil",
@@ -208,7 +223,7 @@ IMPORTANT INGREDIENT RULES:
       },
       {
         title: "Pantry Stir Fry",
-        description: `A vibrant and quick stir fry that showcases your pantry vegetables in a delicious Asian-inspired dish. This colorful meal features ${pantryNames} tossed in a savory sauce, creating a healthy and satisfying dinner that's packed with flavor and ready in just 15 minutes. Perfect for when you want something nutritious and delicious without spending hours in the kitchen.`,
+        description: `A vibrant stir fry featuring ${pantryNames} in a savory Asian-inspired sauce. Ready in 15 minutes with healthy vegetables and bold flavors.`,
         ingredients: [
           "2 cups mixed vegetables (from your pantry)",
           "2 tablespoons vegetable oil",
@@ -231,7 +246,7 @@ IMPORTANT INGREDIENT RULES:
       },
       {
         title: "Fresh Pantry Salad",
-        description: `A bright and refreshing salad that celebrates the fresh ingredients in your pantry. This simple yet satisfying dish combines ${pantryNames} with a light, zesty dressing for a healthy meal that's perfect for lunch or as a side dish. The combination of crisp vegetables and tangy dressing creates a delightful contrast of textures and flavors that will leave you feeling energized and satisfied.`,
+        description: `A bright and refreshing salad featuring ${pantryNames} with a light, zesty dressing. Perfect for lunch or as a healthy side dish with crisp vegetables and tangy flavors.`,
         ingredients: [
           "2 cups mixed fresh vegetables (from your pantry)",
           "2 tablespoons extra virgin olive oil",

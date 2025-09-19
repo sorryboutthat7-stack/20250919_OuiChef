@@ -1,8 +1,8 @@
-console.log("ENV OPENAI:", process.env.EXPO_PUBLIC_OPENAI_API_KEY?.substring(0,8));
-console.log("ENV UNSPLASH:", process.env.EXPO_PUBLIC_UNSPLASH_ACCESS_KEY?.substring(0,8));
-
 import * as dotenv from "dotenv";
 dotenv.config();
+
+console.log("ENV OPENAI:", process.env.EXPO_PUBLIC_OPENAI_API_KEY?.substring(0,8));
+console.log("ENV UNSPLASH:", process.env.EXPO_PUBLIC_UNSPLASH_ACCESS_KEY?.substring(0,8));
 
 
 export default {

@@ -17,6 +17,7 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { useRecipeStore } from '../state/recipeStore.fixed';
 import GPTService from '../services/gptService';
+import ImageService from '../services/imageService';
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 
@@ -293,11 +294,42 @@ export default function RecipeFeedScreen() {
   const loadRecipes = async () => {
     setLoading(true);
     try {
-      // For now, use mock recipes
-      setRecipes(mockRecipes);
+      // Generate recipes using GPT service
+      const gptRecipes = await GPTService.generateRecipes(pantryItems, {
+        mealType: filters.mealType,
+        maxTime: filters.maxTime,
+        cuisine: filters.cuisine,
+        dietary: filters.dietary,
+      });
+      
+      // Ensure we have an array to work with
+      if (!gptRecipes || !Array.isArray(gptRecipes) || gptRecipes.length === 0) {
+        console.warn('No recipes received from GPT, using fallback');
+        setRecipes(mockRecipes);
+        return;
+      }
+      
+      // Add sample missing ingredients and enhance with images
+      const recipesWithEnhancements = await Promise.all(
+        gptRecipes.map(async (recipe, index) => {
+          // Get image from Unsplash
+          const imageUrl = await ImageService.getRecipeImage(recipe.title);
+          
+          return {
+            ...recipe,
+            imageUrl,
+            missingIngredients: index === 0 ? ['Olive oil', 'Fresh basil', 'Parmesan cheese'] : 
+                               index === 1 ? ['Garlic', 'Red wine'] : []
+          };
+        })
+      );
+      
+      setRecipes(recipesWithEnhancements);
+      setCurrentIndex(0);
     } catch (error) {
       console.error('Error loading recipes:', error);
-      setRecipes(mockRecipes); // Fallback to mock recipes
+      // Fallback to mock recipes if GPT fails
+      setRecipes(mockRecipes);
     } finally {
       setLoading(false);
     }
@@ -313,14 +345,29 @@ export default function RecipeFeedScreen() {
         dietary: filters.dietary,
       });
       
-      // Add sample missing ingredients to test the yellow section
-      const recipesWithMissingIngredients = gptRecipes.map((recipe, index) => ({
-        ...recipe,
-        missingIngredients: index === 0 ? ['Olive oil', 'Fresh basil', 'Parmesan cheese'] : 
-                           index === 1 ? ['Garlic', 'Red wine'] : []
-      }));
+      // Ensure we have an array to work with
+      if (!gptRecipes || !Array.isArray(gptRecipes) || gptRecipes.length === 0) {
+        console.warn('No recipes received from GPT, using fallback');
+        setRecipes(mockRecipes);
+        return;
+      }
       
-      setRecipes(recipesWithMissingIngredients);
+      // Add sample missing ingredients and enhance with images
+      const recipesWithEnhancements = await Promise.all(
+        gptRecipes.map(async (recipe, index) => {
+          // Get image from Unsplash
+          const imageUrl = await ImageService.getRecipeImage(recipe.title);
+          
+          return {
+            ...recipe,
+            imageUrl,
+            missingIngredients: index === 0 ? ['Olive oil', 'Fresh basil', 'Parmesan cheese'] : 
+                               index === 1 ? ['Garlic', 'Red wine'] : []
+          };
+        })
+      );
+      
+      setRecipes(recipesWithEnhancements);
       setCurrentIndex(0);
     } catch (error) {
       console.error('Error generating recipes:', error);
