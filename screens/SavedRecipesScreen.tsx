@@ -725,7 +725,10 @@ export default function SavedRecipesScreen() {
       <View style={styles.tabContainer}>
         <TouchableOpacity
           style={[styles.tab, activeTab === 'saved' && styles.activeTab]}
-          onPress={() => setActiveTab('saved')}
+          onPress={() => {
+            HapticService.selectionChange();
+            setActiveTab('saved');
+          }}
           activeOpacity={0.7}
         >
           <Text style={[styles.tabText, activeTab === 'saved' && styles.activeTabText]}>
@@ -734,7 +737,10 @@ export default function SavedRecipesScreen() {
         </TouchableOpacity>
         <TouchableOpacity
           style={[styles.tab, activeTab === 'folders' && styles.activeTab]}
-          onPress={() => setActiveTab('folders')}
+          onPress={() => {
+            HapticService.selectionChange();
+            setActiveTab('folders');
+          }}
           activeOpacity={0.7}
         >
           <Text style={[styles.tabText, activeTab === 'folders' && styles.activeTabText]}>
@@ -743,7 +749,10 @@ export default function SavedRecipesScreen() {
         </TouchableOpacity>
         <TouchableOpacity
           style={[styles.tab, activeTab === 'recent' && styles.activeTab]}
-          onPress={() => setActiveTab('recent')}
+          onPress={() => {
+            HapticService.selectionChange();
+            setActiveTab('recent');
+          }}
           activeOpacity={0.7}
         >
           <Text style={[styles.tabText, activeTab === 'recent' && styles.activeTabText]}>
