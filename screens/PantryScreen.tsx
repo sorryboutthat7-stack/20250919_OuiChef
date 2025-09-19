@@ -1,12 +1,15 @@
 ﻿import React, { useState, useEffect, useRef } from "react";
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, ScrollView, Alert, SafeAreaView, Animated, Image } from "react-native";
 import { Ionicons } from '@expo/vector-icons';
+import { useRecipeStore } from '../state/recipeStore.fixed';
 
 export default function PantryScreen() {
   const [ingredients, setIngredients] = useState("");
-  const [pantryItems, setPantryItems] = useState<string[]>([]);
   const [showFilters, setShowFilters] = useState(false);
   const [activeFilters, setActiveFilters] = useState<string[]>([]);
+  
+  // Use global store for pantry items and filters
+  const { pantryItems, addPantryItem, removePantryItem, updateFilters, filters } = useRecipeStore();
   
   // Animation refs
   const bounceAnim = useRef(new Animated.Value(1)).current;
@@ -88,13 +91,25 @@ export default function PantryScreen() {
       .map(item => item.trim())
       .filter(item => item.length > 0);
 
-    setPantryItems(prev => [...prev, ...newItems]);
+    // Add each item to the global store
+    newItems.forEach((item, index) => {
+      addPantryItem({
+        id: `pantry-${Date.now()}-${index}`,
+        name: item,
+        category: 'general',
+        addedAt: new Date().toISOString()
+      });
+    });
+    
     setIngredients("");
     Alert.alert("Success", "Ingredients added to your pantry!");
   };
 
   const removeIngredient = (index: number) => {
-    setPantryItems(prev => prev.filter((_, i) => i !== index));
+    const itemToRemove = pantryItems[index];
+    if (itemToRemove) {
+      removePantryItem(itemToRemove.id);
+    }
   };
 
   return (
@@ -175,11 +190,52 @@ export default function PantryScreen() {
                           activeFilters.includes(filter) && styles.activeFilterTag
                         ]}
                         onPress={() => {
-                          setActiveFilters(prev =>
-                            prev.includes(filter)
-                              ? prev.filter(f => f !== filter)
-                              : [...prev, filter]
+                          const newActiveFilters = activeFilters.includes(filter)
+                            ? activeFilters.filter(f => f !== filter)
+                            : [...activeFilters, filter];
+                          
+                          setActiveFilters(newActiveFilters);
+                          
+                          // Update global store filters based on active filters
+                          // Map local filter categories to store filter properties
+                          const storeFilters: any = {};
+                          
+                          // Check for meal type filters
+                          const mealTypeFilter = newActiveFilters.find(f => 
+                            ['Breakfast', 'Lunch', 'Dinner', 'Brunch', 'Dessert'].includes(f)
                           );
+                          if (mealTypeFilter) {
+                            storeFilters.mealType = mealTypeFilter.toLowerCase();
+                          }
+                          
+                          // Check for dietary filters
+                          const dietaryFilter = newActiveFilters.find(f => 
+                            ['Vegetarian', 'Vegan', 'Gluten-Free', 'Dairy-Free', 'Low-Carb', 'Keto', 'Paleo'].includes(f)
+                          );
+                          if (dietaryFilter) {
+                            storeFilters.dietary = dietaryFilter.toLowerCase();
+                          }
+                          
+                          // Check for cuisine filters
+                          const cuisineFilter = newActiveFilters.find(f => 
+                            ['Italian', 'Asian', 'Mediterranean', 'Mexican', 'American', 'Indian', 'French'].includes(f)
+                          );
+                          if (cuisineFilter) {
+                            storeFilters.cuisine = cuisineFilter;
+                          }
+                          
+                          // Check for cook time filters
+                          const cookTimeFilter = newActiveFilters.find(f => 
+                            ['>15 min', '15-30 min', '30-45 min', '45+ min'].includes(f)
+                          );
+                          if (cookTimeFilter) {
+                            if (cookTimeFilter === '>15 min') storeFilters.maxTime = 15;
+                            else if (cookTimeFilter === '15-30 min') storeFilters.maxTime = 30;
+                            else if (cookTimeFilter === '30-45 min') storeFilters.maxTime = 45;
+                            else if (cookTimeFilter === '45+ min') storeFilters.maxTime = 60;
+                          }
+                          
+                          updateFilters(storeFilters);
                         }}
                       >
                         <Text style={[
@@ -235,7 +291,10 @@ export default function PantryScreen() {
                       { 
                         text: "Clear All", 
                         style: "destructive",
-                        onPress: () => setPantryItems([])
+                        onPress: () => {
+                          // Clear all pantry items from the store
+                          pantryItems.forEach(item => removePantryItem(item.id));
+                        }
                       }
                     ]
                   );
@@ -248,12 +307,12 @@ export default function PantryScreen() {
             <View style={styles.ingredientContainer}>
               {pantryItems.map((item, index) => (
                 <TouchableOpacity
-                  key={index}
+                  key={item.id}
                   style={styles.ingredientTag}
                   onPress={() => removeIngredient(index)}
                   activeOpacity={0.7}
                 >
-                         <Text style={styles.ingredientText}>{item}</Text>
+                         <Text style={styles.ingredientText}>{item.name}</Text>
                          <Ionicons name="close" size={16} color="#FFFFFF" style={styles.removeIcon} />
                 </TouchableOpacity>
               ))}
