@@ -108,21 +108,32 @@ export default function SavedRecipesScreen() {
   const renderRecipeCard = ({ item }: { item: any }) => (
     <TouchableOpacity style={styles.recipeCard} activeOpacity={0.8}>
       <Image source={{ uri: item.imageUrl || item.image }} style={styles.recipeImage} />
+      
+      {/* Heart icon in top right */}
+      <TouchableOpacity 
+        style={styles.heartButton}
+        onPress={() => removeRecipe(item.id)}
+        activeOpacity={0.7}
+      >
+        <Ionicons name="heart" size={20} color="#FF6B6B" />
+      </TouchableOpacity>
+      
       <View style={styles.recipeInfo}>
         <Text style={styles.recipeTitle} numberOfLines={2}>
           {item.title}
         </Text>
-        <Text style={styles.recipeAuthor}>GPT Generated</Text>
-        <View style={styles.recipeMetadata}>
-          <Ionicons name="time-outline" size={14} color="#666" />
-          <Text style={styles.cookTime}>{item.cookTime || item.cook_time}</Text>
-          <TouchableOpacity 
-            style={styles.removeButton}
-            onPress={() => removeRecipe(item.id)}
-            activeOpacity={0.7}
-          >
-            <Ionicons name="heart" size={16} color="#FF6B6B" />
-          </TouchableOpacity>
+        
+        {/* Bottom row with cook time (left) and calories (right) */}
+        <View style={styles.recipeBottomRow}>
+          <View style={styles.cookTimeContainer}>
+            <Ionicons name="time-outline" size={14} color="#666" />
+            <Text style={styles.cookTime}>{item.cookTime || item.cook_time}</Text>
+          </View>
+          
+          <View style={styles.caloriesContainer}>
+            <Ionicons name="flame-outline" size={14} color="#666" />
+            <Text style={styles.calories}>{item.calories}</Text>
+          </View>
         </View>
       </View>
     </TouchableOpacity>
@@ -370,6 +381,7 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 4,
     elevation: 3,
+    position: 'relative',
   },
   recipeImage: {
     width: '100%',
@@ -379,6 +391,8 @@ const styles = StyleSheet.create({
   },
   recipeInfo: {
     padding: 12,
+    flex: 1,
+    justifyContent: 'space-between',
   },
   recipeTitle: {
     fontSize: 16,
@@ -386,7 +400,7 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     fontFamily: 'NunitoSans-SemiBold',
     color: '#333333',
-    marginBottom: 4,
+    marginBottom: 8,
   },
   recipeAuthor: {
     fontSize: 12,
@@ -517,10 +531,41 @@ const styles = StyleSheet.create({
     color: '#999999',
     marginLeft: 12,
   },
-  // Remove button
-  removeButton: {
-    marginLeft: 'auto',
-    padding: 4,
+  // Heart button in top right
+  heartButton: {
+    position: 'absolute',
+    top: 8,
+    right: 8,
+    backgroundColor: 'rgba(255, 255, 255, 0.9)',
+    borderRadius: 20,
+    padding: 6,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.2,
+    shadowRadius: 2,
+    elevation: 2,
+  },
+  // Bottom row layout
+  recipeBottomRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  cookTimeContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  caloriesContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  calories: {
+    fontSize: 12,
+    lineHeight: 18,
+    fontWeight: '400',
+    fontFamily: 'NunitoSans-Regular',
+    color: '#666666',
+    marginLeft: 4,
   },
   // Empty state
   emptyState: {
