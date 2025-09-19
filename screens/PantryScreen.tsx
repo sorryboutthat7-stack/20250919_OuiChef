@@ -375,8 +375,8 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 22,
     lineHeight: 28,
-    fontWeight: '900',
-    fontFamily: 'NunitoSans-Bold',
+    fontWeight: '500',
+    fontFamily: 'NunitoSans-Medium',
     color: '#333333',
   },
   clearAllButton: {
@@ -391,8 +391,8 @@ const styles = StyleSheet.create({
     elevation: 2,
   },
   clearAllButtonText: {
-    fontSize: 16,
-    lineHeight: 22,
+    fontSize: 14,
+    lineHeight: 20,
     fontWeight: '500',
     fontFamily: 'NunitoSans-Medium',
     letterSpacing: 0.5,
