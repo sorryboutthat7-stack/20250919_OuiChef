@@ -6,7 +6,6 @@ import {
   TouchableOpacity,
   Alert,
   Image,
-  ActivityIndicator,
   Dimensions,
   Animated,
   PanResponder,
@@ -18,6 +17,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useRecipeStore } from '../state/recipeStore.fixed';
 import GPTService from '../services/gptService';
 import ImageService from '../services/imageService';
+import FastImage from 'react-native-fast-image';
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 
@@ -409,7 +409,11 @@ export default function RecipeFeedScreen() {
     return (
       <SafeAreaView style={styles.container}>
         <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color="#FF6B6B" />
+          <FastImage
+            source={require('../assets/animations/coral_outline.gif')}
+            style={styles.loadingGif}
+            resizeMode={FastImage.resizeMode.contain}
+          />
           <Text style={styles.loadingText}>Finding delicious recipes...</Text>
         </View>
       </SafeAreaView>
@@ -581,6 +585,10 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  loadingGif: {
+    width: 120,
+    height: 120,
   },
   loadingText: {
     fontSize: 18,
