@@ -496,6 +496,11 @@ export default function RecipeFeedScreen() {
 
   // Function to determine missing ingredients by comparing recipe with pantry
   const getMissingIngredients = (recipeIngredients: string[], pantryItems: any[]): string[] => {
+    console.log('🔍 getMissingIngredients called with:', {
+      recipeIngredients,
+      pantryItems: pantryItems.map(item => item.name)
+    });
+
     if (!recipeIngredients || recipeIngredients.length === 0) return [];
     if (!pantryItems || pantryItems.length === 0) return recipeIngredients;
 
@@ -533,11 +538,14 @@ export default function RecipeFeedScreen() {
         return false;
       });
 
+      console.log(`🔍 Ingredient: "${ingredient}" -> Clean: "${cleanIngredient}" -> Has: ${hasIngredient}`);
+      
       if (!hasIngredient) {
         missingIngredients.push(ingredient);
       }
     });
 
+    console.log('🔍 Missing ingredients result:', missingIngredients);
     return missingIngredients;
   };
 
@@ -791,7 +799,14 @@ export default function RecipeFeedScreen() {
                 </View>
 
                 {/* Missing Ingredients Section */}
-                {selectedRecipe.missingIngredients && selectedRecipe.missingIngredients.length > 0 && (
+                {(() => {
+                  console.log('🔍 Modal missing ingredients check:', {
+                    hasMissingIngredients: selectedRecipe.missingIngredients,
+                    length: selectedRecipe.missingIngredients?.length,
+                    ingredients: selectedRecipe.missingIngredients
+                  });
+                  return selectedRecipe.missingIngredients && selectedRecipe.missingIngredients.length > 0;
+                })() && (
                   <View style={[styles.section, styles.missingIngredientsBanner]}>
                     <View style={styles.missingIngredientsContent}>
                       <View style={styles.missingIngredientsLeft}>
