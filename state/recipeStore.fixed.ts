@@ -24,6 +24,14 @@ interface AppRecipe {
   cook_time: string;
   cuisine: string;
   image_tag: string;
+  folderId?: string; // Optional folder assignment
+}
+
+interface RecipeFolder {
+  id: string;
+  name: string;
+  color: string;
+  createdAt: string;
 }
 
 interface RecipeStore {
@@ -32,6 +40,7 @@ interface RecipeStore {
   currentBatchIndex: number;
   pantryItems: PantryItem[];
   filters: RecipeFilters;
+  folders: RecipeFolder[];
   addRecipe: (recipe: AppRecipe) => void;
   removeRecipe: (recipeId: string) => void;
   isRecipeSaved: (recipeId: string) => boolean;
@@ -42,6 +51,12 @@ interface RecipeStore {
   removePantryItem: (itemId: string) => void;
   updatePantryItem: (itemId: string, updates: Partial<PantryItem>) => void;
   updateFilters: (filters: Partial<RecipeFilters>) => void;
+  // Folder methods
+  addFolder: (folder: RecipeFolder) => void;
+  removeFolder: (folderId: string) => void;
+  updateFolder: (folderId: string, updates: Partial<RecipeFolder>) => void;
+  assignRecipeToFolder: (recipeId: string, folderId: string | null) => void;
+  getRecipesInFolder: (folderId: string) => AppRecipe[];
 }
 
 export const useRecipeStore = create<RecipeStore>((set, get) => ({
@@ -62,6 +77,13 @@ export const useRecipeStore = create<RecipeStore>((set, get) => ({
     cuisine: '',
     dietary: '',
   },
+  folders: [
+    // Default folders
+    { id: '1', name: 'Quick Meals', color: '#FF6B6B', createdAt: new Date().toISOString() },
+    { id: '2', name: 'Healthy Options', color: '#4CAF50', createdAt: new Date().toISOString() },
+    { id: '3', name: 'Comfort Food', color: '#FF9800', createdAt: new Date().toISOString() },
+    { id: '4', name: 'Desserts', color: '#9C27B0', createdAt: new Date().toISOString() },
+  ],
   
   addRecipe: (recipe: AppRecipe) => {
     set((state) => ({
@@ -128,5 +150,43 @@ export const useRecipeStore = create<RecipeStore>((set, get) => ({
     set((state) => ({
       filters: { ...state.filters, ...newFilters },
     }));
+  },
+  
+  // Folder methods
+  addFolder: (folder: RecipeFolder) => {
+    set((state) => ({
+      folders: [...state.folders, folder],
+    }));
+  },
+  
+  removeFolder: (folderId: string) => {
+    set((state) => ({
+      folders: state.folders.filter(folder => folder.id !== folderId),
+      // Remove folder assignment from recipes
+      savedRecipes: state.savedRecipes.map(recipe => 
+        recipe.folderId === folderId ? { ...recipe, folderId: undefined } : recipe
+      ),
+    }));
+  },
+  
+  updateFolder: (folderId: string, updates: Partial<RecipeFolder>) => {
+    set((state) => ({
+      folders: state.folders.map(folder =>
+        folder.id === folderId ? { ...folder, ...updates } : folder
+      ),
+    }));
+  },
+  
+  assignRecipeToFolder: (recipeId: string, folderId: string | null) => {
+    set((state) => ({
+      savedRecipes: state.savedRecipes.map(recipe =>
+        recipe.id === recipeId ? { ...recipe, folderId: folderId || undefined } : recipe
+      ),
+    }));
+  },
+  
+  getRecipesInFolder: (folderId: string) => {
+    const state = get();
+    return state.savedRecipes.filter(recipe => recipe.folderId === folderId);
   },
 }));

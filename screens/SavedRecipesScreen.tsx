@@ -101,8 +101,8 @@ export default function SavedRecipesScreen() {
   const [activeTab, setActiveTab] = useState<TabType>('saved');
   const [searchQuery, setSearchQuery] = useState('');
   
-  // Get saved recipes from global store
-  const { savedRecipes, removeRecipe } = useRecipeStore();
+  // Get saved recipes and folders from global store
+  const { savedRecipes, removeRecipe, folders, getRecipesInFolder } = useRecipeStore();
 
   // Filter recipes based on search query
   const filteredSavedRecipes = savedRecipes.filter(recipe => {
@@ -152,16 +152,22 @@ export default function SavedRecipesScreen() {
     </TouchableOpacity>
   );
 
-  const renderFolderCard = ({ item }: { item: any }) => (
-    <TouchableOpacity style={styles.folderCard} activeOpacity={0.8}>
-      <Image source={{ uri: item.thumbnail }} style={styles.folderThumbnail} />
-      <View style={styles.folderInfo}>
-        <Text style={styles.folderName}>{item.name}</Text>
-        <Text style={styles.folderCount}>{item.recipeCount} recipes</Text>
-      </View>
-      <Ionicons name="chevron-forward" size={20} color="#666" />
-    </TouchableOpacity>
-  );
+  const renderFolderCard = ({ item }: { item: any }) => {
+    const recipeCount = getRecipesInFolder(item.id).length;
+    
+    return (
+      <TouchableOpacity style={styles.folderCard} activeOpacity={0.8}>
+        <View style={[styles.folderThumbnail, { backgroundColor: item.color }]}>
+          <Ionicons name="folder" size={30} color="#fff" />
+        </View>
+        <View style={styles.folderInfo}>
+          <Text style={styles.folderName}>{item.name}</Text>
+          <Text style={styles.folderCount}>{recipeCount} recipes</Text>
+        </View>
+        <Ionicons name="chevron-forward" size={20} color="#666" />
+      </TouchableOpacity>
+    );
+  };
 
   const renderRecentlyViewedCard = ({ item }: { item: any }) => (
     <TouchableOpacity style={styles.recentCard} activeOpacity={0.8}>
@@ -220,15 +226,23 @@ export default function SavedRecipesScreen() {
           />
         );
       case 'folders':
-        return (
+        return folders.length > 0 ? (
           <FlatList
             key="folders-list"
-            data={mockFolders}
+            data={folders}
             renderItem={renderFolderCard}
             keyExtractor={(item) => item.id}
             contentContainerStyle={styles.foldersContainer}
             showsVerticalScrollIndicator={false}
           />
+        ) : (
+          <View style={styles.emptyState}>
+            <Ionicons name="folder-outline" size={80} color="#FF6B6B" />
+            <Text style={styles.emptyStateTitle}>No Folders Yet</Text>
+            <Text style={styles.emptyStateSubtitle}>
+              Create folders to organize your saved recipes by category or cuisine!
+            </Text>
+          </View>
         );
       case 'recent':
         return (
@@ -460,6 +474,8 @@ const styles = StyleSheet.create({
     width: 60,
     height: 60,
     borderRadius: 8,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   folderInfo: {
     flex: 1,
