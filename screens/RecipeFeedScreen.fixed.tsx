@@ -14,6 +14,7 @@ import {
   ScrollView,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useFocusEffect } from '@react-navigation/native';
 import { useRecipeStore } from '../state/recipeStore.fixed';
 import GPTService from '../services/gptService';
@@ -310,11 +311,15 @@ export default function RecipeFeedScreen() {
   const [selectedRecipe, setSelectedRecipe] = useState<any>(null);
   const [modalVisible, setModalVisible] = useState(false);
   const [servingMultiplier, setServingMultiplier] = useState(1);
+  const [showOverlay, setShowOverlay] = useState(false);
   
   // Track previous state to detect changes
   const [previousPantryItems, setPreviousPantryItems] = useState<any[]>([]);
   const [previousFilters, setPreviousFilters] = useState<any>({});
   const [isGenerating, setIsGenerating] = useState(false);
+  
+  // Animation refs
+  const overlayOpacity = useRef(new Animated.Value(0)).current;
 
   // Function to check if pantry items have changed
   const pantryItemsChanged = (current: any[], previous: any[]): boolean => {
@@ -395,6 +400,57 @@ export default function RecipeFeedScreen() {
       }
     }, [pantryItems, filters, previousPantryItems, previousFilters, isGenerating])
   );
+
+  // First-time user overlay logic
+  useEffect(() => {
+    const checkAndShowOverlay = async () => {
+      try {
+        const hasSeenOverlay = await AsyncStorage.getItem('hasSeenRecipesOverlay');
+        if (!hasSeenOverlay) {
+          // Show overlay for first-time users
+          setShowOverlay(true);
+          
+          // Trigger haptic feedback when overlay appears
+          HapticService.buttonPress();
+          
+          // Fade in animation
+          Animated.timing(overlayOpacity, {
+            toValue: 1,
+            duration: 500,
+            useNativeDriver: true,
+          }).start();
+          
+          // Auto-dismiss after 6 seconds
+          setTimeout(() => {
+            dismissOverlay();
+          }, 6000);
+        }
+      } catch (error) {
+        console.error('Error checking recipes overlay status:', error);
+      }
+    };
+
+    checkAndShowOverlay();
+  }, []);
+
+  // Function to dismiss overlay
+  const dismissOverlay = async () => {
+    try {
+      // Fade out animation
+      Animated.timing(overlayOpacity, {
+        toValue: 0,
+        duration: 300,
+        useNativeDriver: true,
+      }).start(() => {
+        setShowOverlay(false);
+      });
+      
+      // Mark as seen in AsyncStorage
+      await AsyncStorage.setItem('hasSeenRecipesOverlay', 'true');
+    } catch (error) {
+      console.error('Error dismissing recipes overlay:', error);
+    }
+  };
 
   const loadRecipes = async () => {
     setLoading(true);
@@ -991,6 +1047,31 @@ export default function RecipeFeedScreen() {
           )}
         </SafeAreaView>
       </Modal>
+      
+      {/* First-time user overlay */}
+      {showOverlay && (
+        <Animated.View 
+          style={[
+            styles.overlay,
+            { opacity: overlayOpacity }
+          ]}
+        >
+          <TouchableOpacity
+            style={styles.overlayTouchable}
+            onPress={dismissOverlay}
+            activeOpacity={1}
+          >
+            <View style={styles.overlayContent}>
+              <View style={styles.overlayIconContainer}>
+                <Ionicons name="arrow-back" size={24} color="#FFFFFF" style={styles.overlayIcon} />
+                <Ionicons name="arrow-forward" size={24} color="#FFFFFF" style={styles.overlayIcon} />
+              </View>
+              <Text style={styles.overlayTitle}>Swipe right to save, left to dismiss</Text>
+              <Text style={styles.overlaySubtitle}>Tap a card for details</Text>
+            </View>
+          </TouchableOpacity>
+        </Animated.View>
+      )}
     </SafeAreaView>
   );
 }
@@ -1379,5 +1460,58 @@ const styles = StyleSheet.create({
     color: '#333',
     lineHeight: 24,
     marginBottom: 12,
+  },
+  // Overlay styles
+  overlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    width: '100%',
+    height: '100%',
+    backgroundColor: 'rgba(0, 0, 0, 0.7)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 1000,
+  },
+  overlayTouchable: {
+    flex: 1,
+    width: '100%',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  overlayContent: {
+    backgroundColor: 'transparent',
+    paddingHorizontal: 40,
+    paddingVertical: 30,
+    alignItems: 'center',
+  },
+  overlayIconContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 20,
+    gap: 20,
+  },
+  overlayIcon: {
+    opacity: 0.8,
+  },
+  overlayTitle: {
+    fontSize: 22,
+    fontWeight: '700',
+    fontFamily: 'Recoleta-Bold',
+    color: '#FFFFFF',
+    textAlign: 'center',
+    lineHeight: 30,
+    marginBottom: 8,
+  },
+  overlaySubtitle: {
+    fontSize: 16,
+    fontWeight: '400',
+    fontFamily: 'NunitoSans-Regular',
+    color: '#FFFFFF',
+    textAlign: 'center',
+    lineHeight: 22,
+    opacity: 0.9,
   },
 });
