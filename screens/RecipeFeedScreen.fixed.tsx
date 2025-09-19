@@ -21,6 +21,20 @@ import ImageService from '../services/imageService';
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 
+// Function to extract first sentence from description
+const getFirstSentence = (description: string): string => {
+  if (!description) return '';
+  
+  // Find the first sentence ending with . ! or ?
+  const firstSentenceMatch = description.match(/^[^.!?]*[.!?]/);
+  if (firstSentenceMatch) {
+    return firstSentenceMatch[0].trim();
+  }
+  
+  // If no sentence ending found, return first 100 characters
+  return description.length > 100 ? description.substring(0, 100) + '...' : description;
+};
+
 // Mock recipe data for now
 const mockRecipes = [
   {
@@ -528,20 +542,6 @@ export default function RecipeFeedScreen() {
 
   const handleServingChange = (multiplier: number) => {
     setServingMultiplier(multiplier);
-  };
-
-  // Function to extract first sentence from description
-  const getFirstSentence = (description: string): string => {
-    if (!description) return '';
-    
-    // Find the first sentence ending with . ! or ?
-    const firstSentenceMatch = description.match(/^[^.!?]*[.!?]/);
-    if (firstSentenceMatch) {
-      return firstSentenceMatch[0].trim();
-    }
-    
-    // If no sentence ending found, return first 100 characters
-    return description.length > 100 ? description.substring(0, 100) + '...' : description;
   };
 
   // Function to determine missing ingredients by comparing recipe with pantry
