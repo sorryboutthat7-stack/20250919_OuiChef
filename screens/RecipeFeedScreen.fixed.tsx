@@ -297,6 +297,13 @@ export default function RecipeFeedScreen() {
       // Only regenerate if we have pantry items or filters that might have changed
       if (pantryItems.length > 0 || Object.values(filters).some(value => value && value !== '')) {
         console.log('🔄 Tab focused - regenerating recipes based on current pantry/filters');
+        
+        // Clear old recipes and show loading state
+        setRecipes([]);
+        setCurrentIndex(0);
+        setLoading(true);
+        
+        // Generate new recipes
         loadRecipes();
       }
     }, [pantryItems, filters])
@@ -490,7 +497,12 @@ export default function RecipeFeedScreen() {
             style={styles.loadingGif}
             resizeMode="contain"
           />
-          <Text style={styles.loadingText}>Finding delicious recipes...</Text>
+          <Text style={styles.loadingText}>
+            {pantryItems.length > 0 || Object.values(filters).some(value => value && value !== '') 
+              ? 'Generating new recipes...' 
+              : 'Finding delicious recipes...'
+            }
+          </Text>
         </View>
       </SafeAreaView>
     );
