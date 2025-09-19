@@ -32,6 +32,14 @@ interface RecipeFolder {
   name: string;
   color: string;
   createdAt: string;
+  isSmartFolder?: boolean;
+  filterCriteria?: {
+    cuisine?: string;
+    maxCookTime?: number;
+    dietary?: string;
+    mealType?: string;
+    ingredients?: string[];
+  };
 }
 
 interface RecipeStore {
@@ -203,6 +211,47 @@ export const useRecipeStore = create<RecipeStore>((set, get) => ({
   
   getRecipesInFolder: (folderId: string) => {
     const state = get();
+    const folder = state.folders.find(f => f.id === folderId);
+    
+    if (!folder) return [];
+    
+    // For smart folders, filter recipes based on criteria
+    if (folder.isSmartFolder && folder.filterCriteria) {
+      return state.savedRecipes.filter(recipe => {
+        const criteria = folder.filterCriteria!;
+        
+        // Check cuisine match
+        if (criteria.cuisine && recipe.cuisine.toLowerCase() !== criteria.cuisine.toLowerCase()) {
+          return false;
+        }
+        
+        // Check cook time (parse cook time string like "25 min" to number)
+        if (criteria.maxCookTime) {
+          const cookTimeMatch = recipe.cook_time?.match(/(\d+)/);
+          if (cookTimeMatch) {
+            const cookTime = parseInt(cookTimeMatch[1]);
+            if (cookTime > criteria.maxCookTime) {
+              return false;
+            }
+          }
+        }
+        
+        // Check if recipe contains required ingredients
+        if (criteria.ingredients && criteria.ingredients.length > 0) {
+          const recipeIngredients = recipe.ingredients?.join(' ').toLowerCase() || '';
+          const hasRequiredIngredient = criteria.ingredients.some(ingredient =>
+            recipeIngredients.includes(ingredient.toLowerCase())
+          );
+          if (!hasRequiredIngredient) {
+            return false;
+          }
+        }
+        
+        return true;
+      });
+    }
+    
+    // For regular folders, return manually assigned recipes
     return state.savedRecipes.filter(recipe => 
       recipe.folderIds?.includes(folderId) || false
     );

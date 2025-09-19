@@ -103,9 +103,18 @@ export default function SavedRecipesScreen() {
   const [activeTab, setActiveTab] = useState<TabType>('saved');
   const [searchQuery, setSearchQuery] = useState('');
   const [showNewFolderModal, setShowNewFolderModal] = useState(false);
+  const [showNewSmartFolderModal, setShowNewSmartFolderModal] = useState(false);
   const [newFolderName, setNewFolderName] = useState('');
   const [selectedFolder, setSelectedFolder] = useState<any>(null);
   const [showFolderRecipes, setShowFolderRecipes] = useState(false);
+  
+  // Smart folder filter state
+  const [smartFolderName, setSmartFolderName] = useState('');
+  const [selectedCuisine, setSelectedCuisine] = useState('');
+  const [maxCookTime, setMaxCookTime] = useState<number | null>(null);
+  const [selectedDietary, setSelectedDietary] = useState('');
+  const [requiredIngredients, setRequiredIngredients] = useState<string[]>([]);
+  const [newIngredient, setNewIngredient] = useState('');
   
   // Get saved recipes and folders from global store
   const { savedRecipes, removeRecipe, folders, getRecipesInFolder, addFolder } = useRecipeStore();
@@ -158,6 +167,56 @@ export default function SavedRecipesScreen() {
     setSelectedFolder(null);
   };
 
+  // Create smart folder
+  const handleCreateSmartFolder = () => {
+    if (!smartFolderName.trim()) {
+      Alert.alert('Error', 'Please enter a folder name');
+      return;
+    }
+    
+    const colors = ['#FF6B6B', '#4CAF50', '#FF9800', '#9C27B0', '#2196F3', '#E91E63', '#795548', '#607D8B'];
+    const randomColor = colors[Math.floor(Math.random() * colors.length)];
+    
+    const filterCriteria: any = {};
+    if (selectedCuisine) filterCriteria.cuisine = selectedCuisine;
+    if (maxCookTime) filterCriteria.maxCookTime = maxCookTime;
+    if (selectedDietary) filterCriteria.dietary = selectedDietary;
+    if (requiredIngredients.length > 0) filterCriteria.ingredients = requiredIngredients;
+    
+    const newSmartFolder = {
+      id: Date.now().toString(),
+      name: smartFolderName.trim(),
+      color: randomColor,
+      createdAt: new Date().toISOString(),
+      isSmartFolder: true,
+      filterCriteria,
+    };
+    
+    addFolder(newSmartFolder);
+    
+    // Reset form
+    setSmartFolderName('');
+    setSelectedCuisine('');
+    setMaxCookTime(null);
+    setSelectedDietary('');
+    setRequiredIngredients([]);
+    setNewIngredient('');
+    setShowNewSmartFolderModal(false);
+  };
+
+  // Add ingredient to required ingredients list
+  const addRequiredIngredient = () => {
+    if (newIngredient.trim() && !requiredIngredients.includes(newIngredient.trim())) {
+      setRequiredIngredients([...requiredIngredients, newIngredient.trim()]);
+      setNewIngredient('');
+    }
+  };
+
+  // Remove ingredient from required ingredients list
+  const removeRequiredIngredient = (ingredient: string) => {
+    setRequiredIngredients(requiredIngredients.filter(ing => ing !== ingredient));
+  };
+
   const renderRecipeCard = ({ item }: { item: any }) => (
     <TouchableOpacity style={styles.recipeCard} activeOpacity={0.8}>
       <Image source={{ uri: item.imageUrl || item.image }} style={styles.recipeImage} />
@@ -202,7 +261,12 @@ export default function SavedRecipesScreen() {
         onPress={() => handleFolderPress(item)}
       >
         <View style={[styles.folderThumbnail, { backgroundColor: item.color }]}>
-          <Ionicons name="folder" size={40} color="#fff" />
+          <Ionicons name={item.isSmartFolder ? "flash" : "folder"} size={40} color="#fff" />
+          {item.isSmartFolder && (
+            <View style={styles.smartFolderBadge}>
+              <Ionicons name="flash" size={12} color="#fff" />
+            </View>
+          )}
         </View>
         <View style={styles.folderInfo}>
           <Text style={styles.folderName} numberOfLines={2}>
@@ -273,15 +337,26 @@ export default function SavedRecipesScreen() {
       case 'folders':
         return (
           <View style={styles.foldersContainer}>
-            {/* New Folder Button */}
-            <TouchableOpacity 
-              style={styles.newFolderButton}
-              onPress={() => setShowNewFolderModal(true)}
-              activeOpacity={0.8}
-            >
-              <Ionicons name="add" size={24} color="#FF6B6B" />
-              <Text style={styles.newFolderButtonText}>New Folder</Text>
-            </TouchableOpacity>
+            {/* New Folder Buttons */}
+            <View style={styles.newFolderButtonsContainer}>
+              <TouchableOpacity 
+                style={[styles.newFolderButton, styles.regularFolderButton]}
+                onPress={() => setShowNewFolderModal(true)}
+                activeOpacity={0.8}
+              >
+                <Ionicons name="add" size={24} color="#FF6B6B" />
+                <Text style={styles.newFolderButtonText}>New Folder</Text>
+              </TouchableOpacity>
+              
+              <TouchableOpacity 
+                style={[styles.newFolderButton, styles.smartFolderButton]}
+                onPress={() => setShowNewSmartFolderModal(true)}
+                activeOpacity={0.8}
+              >
+                <Ionicons name="flash" size={24} color="#4CAF50" />
+                <Text style={[styles.newFolderButtonText, { color: '#4CAF50' }]}>New Smart Folder</Text>
+              </TouchableOpacity>
+            </View>
             
             {folders.length > 0 ? (
               <FlatList
@@ -416,6 +491,109 @@ export default function SavedRecipesScreen() {
               <Text style={styles.createButtonText}>Create Folder</Text>
             </TouchableOpacity>
           </View>
+        </SafeAreaView>
+      </Modal>
+
+      {/* New Smart Folder Modal */}
+      <Modal
+        visible={showNewSmartFolderModal}
+        animationType="slide"
+        presentationStyle="pageSheet"
+        onRequestClose={() => setShowNewSmartFolderModal(false)}
+      >
+        <SafeAreaView style={styles.modalContainer}>
+          <View style={styles.modalHeader}>
+            <TouchableOpacity 
+              onPress={() => setShowNewSmartFolderModal(false)} 
+              style={styles.closeButton}
+            >
+              <Ionicons name="close" size={24} color="#333" />
+            </TouchableOpacity>
+            <Text style={styles.modalTitle}>New Smart Folder</Text>
+            <View style={styles.placeholder} />
+          </View>
+          
+          <ScrollView style={styles.modalContent}>
+            <Text style={styles.modalLabel}>Folder Name</Text>
+            <TextInput
+              style={styles.modalInput}
+              placeholder="Enter folder name..."
+              placeholderTextColor="#999"
+              value={smartFolderName}
+              onChangeText={setSmartFolderName}
+              autoFocus
+            />
+            
+            <Text style={styles.modalLabel}>Cuisine (Optional)</Text>
+            <TextInput
+              style={styles.modalInput}
+              placeholder="e.g., Italian, Asian, Mexican..."
+              placeholderTextColor="#999"
+              value={selectedCuisine}
+              onChangeText={setSelectedCuisine}
+            />
+            
+            <Text style={styles.modalLabel}>Max Cook Time (Optional)</Text>
+            <TextInput
+              style={styles.modalInput}
+              placeholder="e.g., 30 (minutes)"
+              placeholderTextColor="#999"
+              value={maxCookTime ? maxCookTime.toString() : ''}
+              onChangeText={(text) => setMaxCookTime(text ? parseInt(text) : null)}
+              keyboardType="numeric"
+            />
+            
+            <Text style={styles.modalLabel}>Dietary (Optional)</Text>
+            <TextInput
+              style={styles.modalInput}
+              placeholder="e.g., Vegetarian, Vegan, Gluten-Free..."
+              placeholderTextColor="#999"
+              value={selectedDietary}
+              onChangeText={setSelectedDietary}
+            />
+            
+            <Text style={styles.modalLabel}>Required Ingredients (Optional)</Text>
+            <View style={styles.ingredientInputContainer}>
+              <TextInput
+                style={[styles.modalInput, styles.ingredientInput]}
+                placeholder="Add ingredient..."
+                placeholderTextColor="#999"
+                value={newIngredient}
+                onChangeText={setNewIngredient}
+                onSubmitEditing={addRequiredIngredient}
+              />
+              <TouchableOpacity 
+                style={styles.addIngredientButton}
+                onPress={addRequiredIngredient}
+              >
+                <Ionicons name="add" size={20} color="#4CAF50" />
+              </TouchableOpacity>
+            </View>
+            
+            {requiredIngredients.length > 0 && (
+              <View style={styles.ingredientsList}>
+                {requiredIngredients.map((ingredient, index) => (
+                  <View key={index} style={styles.ingredientTag}>
+                    <Text style={styles.ingredientTagText}>{ingredient}</Text>
+                    <TouchableOpacity 
+                      onPress={() => removeRequiredIngredient(ingredient)}
+                      style={styles.removeIngredientButton}
+                    >
+                      <Ionicons name="close" size={16} color="#666" />
+                    </TouchableOpacity>
+                  </View>
+                ))}
+              </View>
+            )}
+            
+            <TouchableOpacity 
+              style={[styles.createButton, styles.smartCreateButton]}
+              onPress={handleCreateSmartFolder}
+              activeOpacity={0.8}
+            >
+              <Text style={styles.createButtonText}>Create Smart Folder</Text>
+            </TouchableOpacity>
+          </ScrollView>
         </SafeAreaView>
       </Modal>
 
@@ -603,20 +781,30 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: 20,
   },
+  newFolderButtonsContainer: {
+    flexDirection: 'row',
+    gap: 12,
+    marginBottom: 16,
+  },
   newFolderButton: {
+    flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: '#fff',
     borderRadius: 12,
     padding: 16,
-    marginBottom: 16,
     borderWidth: 2,
-    borderColor: '#FF6B6B',
     borderStyle: 'dashed',
   },
+  regularFolderButton: {
+    borderColor: '#FF6B6B',
+  },
+  smartFolderButton: {
+    borderColor: '#4CAF50',
+  },
   newFolderButtonText: {
-    fontSize: 16,
+    fontSize: 14,
     fontWeight: '600',
     fontFamily: 'NunitoSans-SemiBold',
     color: '#FF6B6B',
@@ -640,6 +828,15 @@ const styles = StyleSheet.create({
     borderTopRightRadius: 12,
     justifyContent: 'center',
     alignItems: 'center',
+    position: 'relative',
+  },
+  smartFolderBadge: {
+    position: 'absolute',
+    top: 8,
+    right: 8,
+    backgroundColor: 'rgba(0, 0, 0, 0.3)',
+    borderRadius: 12,
+    padding: 4,
   },
   folderInfo: {
     padding: 12,
@@ -839,5 +1036,49 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     fontFamily: 'NunitoSans-SemiBold',
     color: '#fff',
+  },
+  smartCreateButton: {
+    backgroundColor: '#4CAF50',
+  },
+  // Ingredient input styles
+  ingredientInputContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  ingredientInput: {
+    flex: 1,
+    marginBottom: 0,
+    marginRight: 12,
+  },
+  addIngredientButton: {
+    backgroundColor: '#4CAF50',
+    borderRadius: 8,
+    padding: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  ingredientsList: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    marginBottom: 24,
+    gap: 8,
+  },
+  ingredientTag: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#E8F5E8',
+    borderRadius: 16,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+  },
+  ingredientTagText: {
+    fontSize: 14,
+    fontFamily: 'NunitoSans-Regular',
+    color: '#2E7D32',
+    marginRight: 6,
+  },
+  removeIngredientButton: {
+    padding: 2,
   },
 });
