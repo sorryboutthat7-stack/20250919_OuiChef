@@ -122,7 +122,6 @@ export default function PantryScreen() {
     <SafeAreaView style={styles.container}>
       <ScrollView style={styles.scrollView}>
                <View style={styles.header}>
-                 <Text style={styles.subtitle}>What's in your fridge?</Text>
                </View>
 
         {/* Filter Banner */}
