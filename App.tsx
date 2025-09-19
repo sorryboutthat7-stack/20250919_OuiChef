@@ -6,6 +6,7 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { StatusBar } from 'expo-status-bar';
 import * as Font from 'expo-font';
 import { Ionicons } from '@expo/vector-icons';
+import HapticService from './services/hapticService';
 
 // Import actual screens
 import PantryScreen from './screens/PantryScreen';
@@ -50,6 +51,11 @@ function MainTabs() {
         headerTitleStyle: {
           fontWeight: 'bold',
           fontFamily: 'Recoleta-Bold',
+        },
+      }}
+      screenListeners={{
+        tabPress: () => {
+          HapticService.selectionChange();
         },
       }}
     >

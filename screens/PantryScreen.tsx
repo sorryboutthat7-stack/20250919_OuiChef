@@ -134,7 +134,10 @@ export default function PantryScreen() {
         >
           <TouchableOpacity
             style={styles.filterBannerContent}
-            onPress={() => setShowFilters(!showFilters)}
+            onPress={() => {
+              HapticService.buttonPress();
+              setShowFilters(!showFilters);
+            }}
             activeOpacity={0.8}
           >
                    <View style={styles.filterBannerLeft}>
