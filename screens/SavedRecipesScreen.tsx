@@ -104,6 +104,20 @@ export default function SavedRecipesScreen() {
   // Get saved recipes from global store
   const { savedRecipes, removeRecipe } = useRecipeStore();
 
+  // Filter recipes based on search query
+  const filteredSavedRecipes = savedRecipes.filter(recipe => {
+    if (!searchQuery.trim()) return true;
+    
+    const searchTerm = searchQuery.toLowerCase().trim();
+    const title = recipe.title.toLowerCase();
+    const description = recipe.description?.toLowerCase() || '';
+    const ingredients = recipe.ingredients?.join(' ').toLowerCase() || '';
+    
+    return title.includes(searchTerm) || 
+           description.includes(searchTerm) || 
+           ingredients.includes(searchTerm);
+  });
+
   const renderRecipeCard = ({ item }: { item: any }) => (
     <TouchableOpacity style={styles.recipeCard} activeOpacity={0.8}>
       <Image source={{ uri: item.imageUrl || item.image }} style={styles.recipeImage} />
@@ -169,10 +183,34 @@ export default function SavedRecipesScreen() {
   const renderContent = () => {
     switch (activeTab) {
       case 'saved':
-        return savedRecipes.length > 0 ? (
+        if (savedRecipes.length === 0) {
+          return (
+            <View style={styles.emptyState}>
+              <Ionicons name="heart-outline" size={80} color="#FF6B6B" />
+              <Text style={styles.emptyStateTitle}>No Saved Recipes Yet</Text>
+              <Text style={styles.emptyStateSubtitle}>
+                Swipe right on recipe cards in the Find Recipes tab to save your favorites!
+              </Text>
+            </View>
+          );
+        }
+        
+        if (filteredSavedRecipes.length === 0 && searchQuery.trim()) {
+          return (
+            <View style={styles.emptyState}>
+              <Ionicons name="search-outline" size={80} color="#FF6B6B" />
+              <Text style={styles.emptyStateTitle}>No Results Found</Text>
+              <Text style={styles.emptyStateSubtitle}>
+                No recipes match "{searchQuery}". Try a different search term.
+              </Text>
+            </View>
+          );
+        }
+        
+        return (
           <FlatList
             key="saved-recipes-grid"
-            data={savedRecipes}
+            data={filteredSavedRecipes}
             renderItem={renderRecipeCard}
             keyExtractor={(item) => item.id}
             numColumns={2}
@@ -180,14 +218,6 @@ export default function SavedRecipesScreen() {
             contentContainerStyle={styles.gridContainer}
             showsVerticalScrollIndicator={false}
           />
-        ) : (
-          <View style={styles.emptyState}>
-            <Ionicons name="heart-outline" size={80} color="#FF6B6B" />
-            <Text style={styles.emptyStateTitle}>No Saved Recipes Yet</Text>
-            <Text style={styles.emptyStateSubtitle}>
-              Swipe right on recipe cards in the Find Recipes tab to save your favorites!
-            </Text>
-          </View>
         );
       case 'folders':
         return (
