@@ -541,7 +541,6 @@ export default function SavedRecipesScreen() {
             />
             
             <Text style={styles.modalLabel}>Select Filter Criteria</Text>
-            <Text style={styles.modalSubLabel}>Choose the criteria that recipes must match to appear in this folder</Text>
             
             {Object.entries(filterCategories).map(([category, filters]) => (
               <View key={category} style={styles.filterCategory}>
