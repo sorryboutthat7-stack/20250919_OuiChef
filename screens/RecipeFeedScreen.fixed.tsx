@@ -310,7 +310,7 @@ export default function RecipeFeedScreen() {
       
       // Add sample missing ingredients and enhance with images
       const recipesWithEnhancements = await Promise.all(
-        gptRecipes.map(async (recipe, index) => {
+        (gptRecipes || []).map(async (recipe, index) => {
           // Get image from Unsplash
           const imageUrl = await ImageService.getRecipeImage(recipe.title);
           
@@ -353,7 +353,7 @@ export default function RecipeFeedScreen() {
       
       // Add sample missing ingredients and enhance with images
       const recipesWithEnhancements = await Promise.all(
-        gptRecipes.map(async (recipe, index) => {
+        (gptRecipes || []).map(async (recipe, index) => {
           // Get image from Unsplash
           const imageUrl = await ImageService.getRecipeImage(recipe.title);
           
@@ -555,14 +555,14 @@ export default function RecipeFeedScreen() {
 
                 <View style={[styles.section, styles.sectionWithBackground]}>
                   <Text style={styles.sectionTitle}>Ingredients</Text>
-                  {selectedRecipe.ingredients.map((ingredient: string, index: number) => (
+                  {(selectedRecipe.ingredients || []).map((ingredient: string, index: number) => (
                     <Text key={index} style={styles.ingredientText}>• {ingredient}</Text>
                   ))}
                 </View>
 
                 <View style={[styles.section, styles.sectionWithBackground]}>
                   <Text style={styles.sectionTitle}>Instructions</Text>
-                  {selectedRecipe.instructions.map((instruction: string, index: number) => (
+                  {(selectedRecipe.instructions || []).map((instruction: string, index: number) => (
                     <Text key={index} style={styles.instructionText}>{instruction}</Text>
                   ))}
                 </View>
@@ -623,7 +623,7 @@ const styles = StyleSheet.create({
   },
   recipeImage: {
     width: '100%',
-    height: '80%',
+    height: '85%',
     resizeMode: 'cover',
   },
   recipeOverlay: {
