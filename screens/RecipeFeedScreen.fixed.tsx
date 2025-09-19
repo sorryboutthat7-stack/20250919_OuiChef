@@ -568,38 +568,41 @@ export default function RecipeFeedScreen() {
     if (multiplier === 1) return ingredient; // No scaling needed for 1x serving
     
     // Regular expressions to match common quantity patterns
+    // Order matters - more specific patterns first to avoid overlapping matches
     const patterns = [
-      // Fractions: 1/2, 1/4, 3/4, etc.
-      { regex: /(\d+\/\d+)/g, type: 'fraction' },
-      // Decimals: 0.5, 1.5, 2.5, etc.
-      { regex: /(\d+\.\d+)/g, type: 'decimal' },
-      // Whole numbers: 1, 2, 3, etc.
-      { regex: /(\d+)/g, type: 'whole' },
+      // Fractions: 1/2, 1/4, 3/4, etc. (must be at start of word or after space)
+      { regex: /(?:^|\s)(\d+\/\d+)(?=\s|$)/g, type: 'fraction' },
+      // Decimals: 0.5, 1.5, 2.5, etc. (must be at start of word or after space)
+      { regex: /(?:^|\s)(\d+\.\d+)(?=\s|$)/g, type: 'decimal' },
+      // Whole numbers: 1, 2, 3, etc. (must be at start of word or after space, not part of fraction)
+      { regex: /(?:^|\s)(\d+)(?=\s|$)/g, type: 'whole' },
     ];
 
     let scaledIngredient = ingredient;
 
     patterns.forEach(({ regex, type }) => {
-      scaledIngredient = scaledIngredient.replace(regex, (match) => {
+      scaledIngredient = scaledIngredient.replace(regex, (match, capturedGroup) => {
+        // Use the captured group (the actual number/fraction) instead of the full match
+        const numberPart = capturedGroup;
         let value: number;
         
         if (type === 'fraction') {
           // Parse fraction (e.g., "1/2" -> 0.5)
-          const [numerator, denominator] = match.split('/').map(Number);
+          const [numerator, denominator] = numberPart.split('/').map(Number);
           value = numerator / denominator;
         } else if (type === 'decimal') {
           // Parse decimal (e.g., "1.5" -> 1.5)
-          value = parseFloat(match);
+          value = parseFloat(numberPart);
         } else {
           // Parse whole number (e.g., "2" -> 2)
-          value = parseInt(match);
+          value = parseInt(numberPart);
         }
 
         // Scale the value
         const scaledValue = value * multiplier;
 
         // Format the result - prefer fractions over decimals
-        return formatQuantityAsFraction(scaledValue);
+        return match.replace(numberPart, formatQuantityAsFraction(scaledValue));
       });
     });
 
