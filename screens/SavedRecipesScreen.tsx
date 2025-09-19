@@ -282,7 +282,7 @@ export default function SavedRecipesScreen() {
           {firstRecipe && firstRecipe.imageUrl ? (
             <Image source={{ uri: firstRecipe.imageUrl }} style={styles.folderThumbnailImage} />
           ) : (
-            <View style={[styles.folderThumbnailFallback, { backgroundColor: item.color }]}>
+            <View style={[styles.folderThumbnailFallback, { backgroundColor: '#fff' }]}>
               <Ionicons name="restaurant" size={40} color="#999" />
             </View>
           )}
