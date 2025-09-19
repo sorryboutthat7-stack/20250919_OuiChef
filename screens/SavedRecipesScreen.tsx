@@ -354,7 +354,7 @@ export default function SavedRecipesScreen() {
                     onPress={() => setShowNewFolderModal(true)}
                     activeOpacity={0.8}
                   >
-                    <Ionicons name="add" size={24} color="#FF6B6B" />
+                    <Ionicons name="add" size={24} color="#fff" />
                     <Text style={styles.newFolderButtonText}>New Folder</Text>
                   </TouchableOpacity>
                 );
@@ -782,7 +782,7 @@ const styles = StyleSheet.create({
     padding: 20,
   },
   newFolderButton: {
-    backgroundColor: '#fff',
+    backgroundColor: '#FF6B6B',
     borderRadius: 12,
     width: '48%',
     height: 42,
@@ -792,8 +792,6 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 4,
     elevation: 3,
-    borderWidth: 2,
-    borderStyle: 'dashed',
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
@@ -809,7 +807,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '600',
     fontFamily: 'NunitoSans-SemiBold',
-    color: '#FF6B6B',
+    color: '#fff',
     marginLeft: 8,
   },
   folderCard: {
