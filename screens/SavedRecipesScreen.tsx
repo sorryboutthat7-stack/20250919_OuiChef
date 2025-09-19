@@ -259,6 +259,160 @@ export default function SavedRecipesScreen() {
     setServingMultiplier(1);
   };
 
+  // Function to format quantities as fractions
+  const formatQuantityAsFraction = (value: number): string => {
+    // If it's a whole number, return as is
+    if (value % 1 === 0) {
+      return value.toString();
+    }
+
+    // Common fractions to check for
+    const commonFractions = [
+      { decimal: 0.125, fraction: '1/8' },
+      { decimal: 0.25, fraction: '1/4' },
+      { decimal: 0.33, fraction: '1/3' },
+      { decimal: 0.375, fraction: '3/8' },
+      { decimal: 0.5, fraction: '1/2' },
+      { decimal: 0.625, fraction: '5/8' },
+      { decimal: 0.67, fraction: '2/3' },
+      { decimal: 0.75, fraction: '3/4' },
+      { decimal: 0.875, fraction: '7/8' },
+    ];
+
+    // Check for exact matches with common fractions
+    for (const { decimal, fraction } of commonFractions) {
+      if (Math.abs(value - decimal) < 0.01) {
+        return fraction;
+      }
+    }
+
+    // For values greater than 1, try to separate whole and fractional parts
+    if (value > 1) {
+      const wholePart = Math.floor(value);
+      const fractionalPart = value - wholePart;
+      
+      // Check if the fractional part matches a common fraction
+      for (const { decimal, fraction } of commonFractions) {
+        if (Math.abs(fractionalPart - decimal) < 0.01) {
+          return `${wholePart} ${fraction}`;
+        }
+      }
+      
+      // If no common fraction matches, use decimal for fractional part
+      if (fractionalPart > 0.01) {
+        return `${wholePart} ${fractionalPart.toFixed(2).replace(/\.00$/, '').replace(/\.0$/, '')}`;
+      }
+      
+      return wholePart.toString();
+    }
+
+    // For values less than 1, try to find the closest common fraction
+    let closestFraction = '';
+    let smallestDiff = Infinity;
+    
+    for (const { decimal, fraction } of commonFractions) {
+      const diff = Math.abs(value - decimal);
+      if (diff < smallestDiff && diff < 0.1) { // Only if reasonably close
+        smallestDiff = diff;
+        closestFraction = fraction;
+      }
+    }
+    
+    if (closestFraction) {
+      return closestFraction;
+    }
+
+    // Fallback to decimal with 2 decimal places, removing trailing zeros
+    return value.toFixed(2).replace(/\.00$/, '').replace(/\.0$/, '');
+  };
+
+  // Function to scale ingredient quantities based on serving size
+  const scaleIngredientQuantity = (ingredient: string, multiplier: number): string => {
+    if (multiplier === 1) return ingredient; // No scaling needed for 1x serving
+    
+    // Regular expressions to match common quantity patterns
+    // Order matters - more specific patterns first to avoid overlapping matches
+    const patterns = [
+      // Fractions: 1/2, 1/4, 3/4, etc. (must be at start of word or after space)
+      { regex: /(?:^|\s)(\d+\/\d+)(?=\s|$)/g, type: 'fraction' },
+      // Decimals: 0.5, 1.5, 2.5, etc. (must be at start of word or after space)
+      { regex: /(?:^|\s)(\d+\.\d+)(?=\s|$)/g, type: 'decimal' },
+      // Whole numbers: 1, 2, 3, etc. (must be at start of word or after space, not part of fraction)
+      { regex: /(?:^|\s)(\d+)(?=\s|$)/g, type: 'whole' },
+    ];
+
+    let scaledIngredient = ingredient;
+
+    patterns.forEach(({ regex, type }) => {
+      scaledIngredient = scaledIngredient.replace(regex, (match, capturedGroup) => {
+        // Use the captured group (the actual number/fraction) instead of the full match
+        const numberPart = capturedGroup;
+        let value: number;
+        
+        if (type === 'fraction') {
+          // Parse fraction (e.g., "1/2" -> 0.5)
+          const [numerator, denominator] = numberPart.split('/').map(Number);
+          value = numerator / denominator;
+        } else if (type === 'decimal') {
+          // Parse decimal (e.g., "1.5" -> 1.5)
+          value = parseFloat(numberPart);
+        } else {
+          // Parse whole number (e.g., "2" -> 2)
+          value = parseInt(numberPart);
+        }
+
+        // Scale the value
+        const scaledValue = value * multiplier;
+
+        // Format the result - prefer fractions over decimals
+        return match.replace(numberPart, formatQuantityAsFraction(scaledValue));
+      });
+    });
+
+    return scaledIngredient;
+  };
+
+  // Function to scale calories based on serving size
+  const scaleCalories = (caloriesText: string, multiplier: number): string => {
+    if (multiplier === 1) return caloriesText;
+    
+    // Extract number from calories text (e.g., "450 cal" -> 450)
+    const match = caloriesText.match(/(\d+)/);
+    if (!match) return caloriesText;
+    
+    const originalCalories = parseInt(match[1]);
+    const scaledCalories = Math.round(originalCalories * multiplier);
+    
+    return caloriesText.replace(/\d+/, scaledCalories.toString());
+  };
+
+  // Function to adjust cook time based on serving size
+  const adjustCookTime = (cookTimeText: string, multiplier: number): string => {
+    if (multiplier === 1) return cookTimeText;
+    
+    // Extract number from cook time text (e.g., "25 min" -> 25)
+    const match = cookTimeText.match(/(\d+)/);
+    if (!match) return cookTimeText;
+    
+    const originalTime = parseInt(match[1]);
+    
+    // Cook time doesn't scale linearly - larger batches might take slightly longer
+    // but not proportionally. Use a more conservative scaling.
+    let adjustedTime: number;
+    if (multiplier <= 0.5) {
+      // Smaller batches cook faster
+      adjustedTime = Math.round(originalTime * 0.8);
+    } else if (multiplier >= 2) {
+      // Larger batches take a bit longer
+      adjustedTime = Math.round(originalTime * 1.2);
+    } else {
+      // Close to original serving size, minimal adjustment
+      adjustedTime = originalTime;
+    }
+    
+    return cookTimeText.replace(/\d+/, adjustedTime.toString());
+  };
+
   // Handle serving size change
   const handleServingChange = (multiplier: number) => {
     setServingMultiplier(multiplier);
@@ -336,7 +490,7 @@ export default function SavedRecipesScreen() {
         {/* Bottom row with cook time (left) and calories (right) */}
         <View style={styles.recipeBottomRow}>
           <View style={styles.cookTimeContainer}>
-            <Ionicons name="time-outline" size={14} color="#666" />
+          <Ionicons name="time-outline" size={14} color="#666" />
             <Text style={styles.cookTime}>{item.cookTime || item.cook_time}</Text>
           </View>
           
@@ -374,14 +528,14 @@ export default function SavedRecipesScreen() {
             </View>
           )}
         </View>
-        <View style={styles.folderInfo}>
+      <View style={styles.folderInfo}>
           <Text style={styles.folderName} numberOfLines={2}>
             {item.name}
           </Text>
           <Text style={styles.folderCount}>{recipeCount} recipes</Text>
-        </View>
-      </TouchableOpacity>
-    );
+      </View>
+    </TouchableOpacity>
+  );
   };
 
   const renderRecentlyViewedCard = ({ item }: { item: any }) => (
@@ -505,7 +659,7 @@ export default function SavedRecipesScreen() {
   return (
     <SafeAreaView style={styles.container}>
       {/* Search Bar */}
-      <View style={styles.searchContainer}>
+        <View style={styles.searchContainer}>
         <View style={styles.searchInputContainer}>
           <TextInput
             style={styles.searchInput}
@@ -515,13 +669,13 @@ export default function SavedRecipesScreen() {
             onChangeText={setSearchQuery}
           />
           {searchQuery.length > 0 && (
-            <TouchableOpacity
-              style={styles.searchCloseButton}
+          <TouchableOpacity
+            style={styles.searchCloseButton}
               onPress={() => setSearchQuery('')}
-            >
-              <Ionicons name="close" size={20} color="#666" />
-            </TouchableOpacity>
-          )}
+          >
+            <Ionicons name="close" size={20} color="#666" />
+          </TouchableOpacity>
+      )}
         </View>
       </View>
 
@@ -743,7 +897,7 @@ export default function SavedRecipesScreen() {
             <ScrollView style={styles.modalContent}>
               <Image 
                 source={{ uri: selectedRecipe.imageUrl || selectedRecipe.image }} 
-                style={styles.recipeModalImage} 
+                style={styles.modalImage} 
               />
               
               <View style={styles.modalInfo}>
@@ -754,26 +908,26 @@ export default function SavedRecipesScreen() {
                 
                 <View style={[styles.modalDetails, styles.detailsWithBackground]}>
                   <View style={styles.modalDetailItemLeft}>
-                    <Ionicons name="time-outline" size={16} color="#666" />
+                    <Ionicons name="time-outline" size={20} color="#FF6B6B" />
                     <Text style={styles.modalDetailText}>
-                      {selectedRecipe.cookTime || selectedRecipe.cook_time || '30 min'}
+                      {adjustCookTime(selectedRecipe.cookTime || selectedRecipe.cook_time || '30 min', servingMultiplier)}
                     </Text>
                   </View>
                   <View style={styles.modalDetailItemCenter}>
-                    <Ionicons name="trending-up-outline" size={16} color="#666" />
+                    <Ionicons name="trending-up-outline" size={20} color="#FF6B6B" />
                     <Text style={styles.modalDetailText}>
                       {selectedRecipe.difficulty || 'Medium'}
                     </Text>
                   </View>
                   <View style={styles.modalDetailItemRight}>
-                    <Ionicons name="flame-outline" size={16} color="#666" />
+                    <Ionicons name="flame-outline" size={20} color="#FF6B6B" />
                     <Text style={styles.modalDetailText}>
-                      {selectedRecipe.calories || '400 cal'}
+                      {scaleCalories(selectedRecipe.calories || '400 cal', servingMultiplier)}
                     </Text>
                   </View>
                 </View>
                 
-                <View style={styles.servingSizeSection}>
+                <View style={[styles.section, styles.servingSizeSection]}>
                   <View style={styles.servingSizeRow}>
                     <Text style={styles.servingSizeTitle}>Serving Size</Text>
                     <View style={styles.servingSizeButtons}>
@@ -837,17 +991,17 @@ export default function SavedRecipesScreen() {
                 )}
                 
                 {/* Ingredients */}
-                <View style={styles.sectionWithBackground}>
+                <View style={[styles.section, styles.sectionWithBackground]}>
                   <Text style={styles.sectionTitle}>Ingredients</Text>
                   {selectedRecipe.ingredients?.map((ingredient: string, index: number) => (
                     <Text key={index} style={styles.ingredientText}>
-                      • {ingredient}
+                      • {scaleIngredientQuantity(ingredient, servingMultiplier)}
                     </Text>
                   ))}
                 </View>
                 
                 {/* Instructions */}
-                <View style={styles.sectionWithBackground}>
+                <View style={[styles.section, styles.sectionWithBackground]}>
                   <Text style={styles.sectionTitle}>Instructions</Text>
                   {selectedRecipe.instructions?.map((instruction: string, index: number) => (
                     <Text key={index} style={styles.instructionText}>
@@ -1324,13 +1478,12 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#f8f9fa',
   },
-  recipeModalImage: {
+  modalImage: {
     width: '100%',
     height: 250,
     resizeMode: 'cover',
   },
   modalInfo: {
-    flex: 1,
     padding: 20,
   },
   titleDescriptionSection: {
