@@ -316,7 +316,12 @@ export default function RecipeFeedScreen() {
           
           return {
             ...recipe,
+            id: recipe.id || `gpt-${index}`,
             imageUrl,
+            cookTime: recipe.cook_time || '30 min',
+            instructions: recipe.steps || [],
+            difficulty: recipe.difficulty || 'Medium',
+            calories: recipe.calories || '400 cal',
             missingIngredients: index === 0 ? ['Olive oil', 'Fresh basil', 'Parmesan cheese'] : 
                                index === 1 ? ['Garlic', 'Red wine'] : []
           };
@@ -359,7 +364,12 @@ export default function RecipeFeedScreen() {
           
           return {
             ...recipe,
+            id: recipe.id || `gpt-${index}`,
             imageUrl,
+            cookTime: recipe.cook_time || '30 min',
+            instructions: recipe.steps || [],
+            difficulty: recipe.difficulty || 'Medium',
+            calories: recipe.calories || '400 cal',
             missingIngredients: index === 0 ? ['Olive oil', 'Fresh basil', 'Parmesan cheese'] : 
                                index === 1 ? ['Garlic', 'Red wine'] : []
           };
@@ -623,7 +633,7 @@ const styles = StyleSheet.create({
   },
   recipeImage: {
     width: '100%',
-    height: '85%',
+    height: '100%',
     resizeMode: 'cover',
   },
   recipeOverlay: {
