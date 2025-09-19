@@ -376,7 +376,7 @@ const styles = StyleSheet.create({
     fontSize: 22,
     lineHeight: 28,
     fontWeight: '900',
-    fontFamily: 'Recoleta-Bold',
+    fontFamily: 'NunitoSans-Bold',
     color: '#333333',
   },
   clearAllButton: {
@@ -393,8 +393,8 @@ const styles = StyleSheet.create({
   clearAllButtonText: {
     fontSize: 16,
     lineHeight: 22,
-    fontWeight: '600',
-    fontFamily: 'NunitoSans-SemiBold',
+    fontWeight: '500',
+    fontFamily: 'NunitoSans-Medium',
     letterSpacing: 0.5,
     textTransform: 'uppercase',
     color: '#FFFFFF',
