@@ -421,6 +421,12 @@ export default function RecipeFeedScreen() {
   };
 
   const generateNewRecipes = async () => {
+    // Prevent multiple simultaneous generations
+    if (loading) {
+      console.log('Already generating recipes, skipping...');
+      return;
+    }
+    
     setLoading(true);
     try {
       const gptRecipes = await GPTService.generateRecipes(pantryItems, {
@@ -456,8 +462,9 @@ export default function RecipeFeedScreen() {
         })
       );
       
-      setRecipes(recipesWithEnhancements);
-      setCurrentIndex(0);
+      // Append new recipes to existing ones instead of replacing
+      setRecipes(prevRecipes => [...prevRecipes, ...recipesWithEnhancements]);
+      // Don't reset currentIndex - keep the user's current position
     } catch (error) {
       console.error('Error generating recipes:', error);
       Alert.alert('Error', 'Failed to generate new recipes. Please try again.');
@@ -469,11 +476,25 @@ export default function RecipeFeedScreen() {
   const handleLike = (recipe: any) => {
     // Save recipe to global store
     addRecipe(recipe);
-    setCurrentIndex(prev => prev + 1);
+    setCurrentIndex(prev => {
+      const newIndex = prev + 1;
+      // If we're running low on recipes (less than 2 remaining), generate more
+      if (newIndex >= recipes.length - 1) {
+        generateNewRecipes();
+      }
+      return newIndex;
+    });
   };
 
   const handleSkip = (recipe: any) => {
-    setCurrentIndex(prev => prev + 1);
+    setCurrentIndex(prev => {
+      const newIndex = prev + 1;
+      // If we're running low on recipes (less than 2 remaining), generate more
+      if (newIndex >= recipes.length - 1) {
+        generateNewRecipes();
+      }
+      return newIndex;
+    });
   };
 
   const handleRefresh = () => {
@@ -738,19 +759,16 @@ export default function RecipeFeedScreen() {
     );
   }
 
-  if (currentIndex >= recipes.length) {
+  // Show loading state while generating new recipes
+  if (currentIndex >= recipes.length && loading) {
     return (
       <SafeAreaView style={styles.container}>
-        <View style={styles.emptyContainer}>
-          <Ionicons name="restaurant-outline" size={80} color="#FF6B6B" />
-          <Text style={styles.emptyTitle}>No more recipes!</Text>
-          <Text style={styles.emptySubtitle}>
-            You've seen all available recipes. Tap the button below to generate new ones!
-          </Text>
-          <TouchableOpacity style={styles.refreshButton} onPress={handleRefresh}>
-            <Ionicons name="refresh" size={20} color="#fff" />
-            <Text style={styles.refreshButtonText}>Generate New Recipes</Text>
-          </TouchableOpacity>
+        <View style={styles.loadingContainer}>
+          <Image 
+            source={require('../assets/coral_outline.gif')} 
+            style={styles.loadingGif}
+          />
+          <Text style={styles.loadingText}>Generating new recipes...</Text>
         </View>
       </SafeAreaView>
     );
