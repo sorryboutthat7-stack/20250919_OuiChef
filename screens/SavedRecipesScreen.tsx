@@ -110,11 +110,17 @@ export default function SavedRecipesScreen() {
   
   // Smart folder filter state
   const [smartFolderName, setSmartFolderName] = useState('');
-  const [selectedCuisine, setSelectedCuisine] = useState('');
-  const [maxCookTime, setMaxCookTime] = useState<number | null>(null);
-  const [selectedDietary, setSelectedDietary] = useState('');
-  const [requiredIngredients, setRequiredIngredients] = useState<string[]>([]);
-  const [newIngredient, setNewIngredient] = useState('');
+  const [smartFolderFilters, setSmartFolderFilters] = useState<string[]>([]);
+  
+  // Filter categories for smart folder
+  const filterCategories = {
+    cuisines: ['Italian', 'Asian', 'Mediterranean', 'Mexican', 'American', 'Indian', 'French'],
+    difficulties: ['Easy', 'Medium', 'Hard'],
+    cookTime: ['15 min', '30 min', '45 min', '60 min'],
+    dietary: ['Vegetarian', 'Vegan', 'Gluten-Free', 'Dairy-Free', 'Low-Carb', 'Keto', 'Paleo'],
+    diningTimes: ['Breakfast', 'Lunch', 'Dinner', 'Brunch', 'Dessert'],
+    foodConscious: ['High-Protein', 'High-Carb', 'Low-Calorie', 'Low-Fat', 'High-Fiber', 'Low-Sodium', 'Sugar-Free']
+  };
   
   // Get saved recipes and folders from global store
   const { savedRecipes, removeRecipe, folders, getRecipesInFolder, addFolder } = useRecipeStore();
@@ -174,14 +180,32 @@ export default function SavedRecipesScreen() {
       return;
     }
     
+    if (smartFolderFilters.length === 0) {
+      Alert.alert('Error', 'Please select at least one filter criteria');
+      return;
+    }
+    
     const colors = ['#FF6B6B', '#4CAF50', '#FF9800', '#9C27B0', '#2196F3', '#E91E63', '#795548', '#607D8B'];
     const randomColor = colors[Math.floor(Math.random() * colors.length)];
     
+    // Parse selected filters into criteria
     const filterCriteria: any = {};
-    if (selectedCuisine) filterCriteria.cuisine = selectedCuisine;
-    if (maxCookTime) filterCriteria.maxCookTime = maxCookTime;
-    if (selectedDietary) filterCriteria.dietary = selectedDietary;
-    if (requiredIngredients.length > 0) filterCriteria.ingredients = requiredIngredients;
+    
+    // Categorize selected filters
+    const cuisines = filterCategories.cuisines.filter(f => smartFolderFilters.includes(f));
+    const difficulties = filterCategories.difficulties.filter(f => smartFolderFilters.includes(f));
+    const cookTimes = filterCategories.cookTime.filter(f => smartFolderFilters.includes(f));
+    const dietary = filterCategories.dietary.filter(f => smartFolderFilters.includes(f));
+    const diningTimes = filterCategories.diningTimes.filter(f => smartFolderFilters.includes(f));
+    const foodConscious = filterCategories.foodConscious.filter(f => smartFolderFilters.includes(f));
+    
+    if (cuisines.length > 0) filterCriteria.cuisine = cuisines[0]; // Take first selected cuisine
+    if (diningTimes.length > 0) filterCriteria.mealType = diningTimes[0]; // Take first selected dining time
+    if (dietary.length > 0) filterCriteria.dietary = dietary[0]; // Take first selected dietary
+    if (cookTimes.length > 0) {
+      const maxTime = Math.max(...cookTimes.map(time => parseInt(time.replace(' min', ''))));
+      filterCriteria.maxCookTime = maxTime;
+    }
     
     const newSmartFolder = {
       id: Date.now().toString(),
@@ -196,25 +220,17 @@ export default function SavedRecipesScreen() {
     
     // Reset form
     setSmartFolderName('');
-    setSelectedCuisine('');
-    setMaxCookTime(null);
-    setSelectedDietary('');
-    setRequiredIngredients([]);
-    setNewIngredient('');
+    setSmartFolderFilters([]);
     setShowNewSmartFolderModal(false);
   };
 
-  // Add ingredient to required ingredients list
-  const addRequiredIngredient = () => {
-    if (newIngredient.trim() && !requiredIngredients.includes(newIngredient.trim())) {
-      setRequiredIngredients([...requiredIngredients, newIngredient.trim()]);
-      setNewIngredient('');
-    }
-  };
-
-  // Remove ingredient from required ingredients list
-  const removeRequiredIngredient = (ingredient: string) => {
-    setRequiredIngredients(requiredIngredients.filter(ing => ing !== ingredient));
+  // Toggle filter selection for smart folder
+  const toggleSmartFolderFilter = (filter: string) => {
+    setSmartFolderFilters(prev => 
+      prev.includes(filter) 
+        ? prev.filter(f => f !== filter)
+        : [...prev, filter]
+    );
   };
 
   const renderRecipeCard = ({ item }: { item: any }) => (
@@ -524,67 +540,42 @@ export default function SavedRecipesScreen() {
               autoFocus
             />
             
-            <Text style={styles.modalLabel}>Cuisine (Optional)</Text>
-            <TextInput
-              style={styles.modalInput}
-              placeholder="e.g., Italian, Asian, Mexican..."
-              placeholderTextColor="#999"
-              value={selectedCuisine}
-              onChangeText={setSelectedCuisine}
-            />
+            <Text style={styles.modalLabel}>Select Filter Criteria</Text>
+            <Text style={styles.modalSubLabel}>Choose the criteria that recipes must match to appear in this folder</Text>
             
-            <Text style={styles.modalLabel}>Max Cook Time (Optional)</Text>
-            <TextInput
-              style={styles.modalInput}
-              placeholder="e.g., 30 (minutes)"
-              placeholderTextColor="#999"
-              value={maxCookTime ? maxCookTime.toString() : ''}
-              onChangeText={(text) => setMaxCookTime(text ? parseInt(text) : null)}
-              keyboardType="numeric"
-            />
-            
-            <Text style={styles.modalLabel}>Dietary (Optional)</Text>
-            <TextInput
-              style={styles.modalInput}
-              placeholder="e.g., Vegetarian, Vegan, Gluten-Free..."
-              placeholderTextColor="#999"
-              value={selectedDietary}
-              onChangeText={setSelectedDietary}
-            />
-            
-            <Text style={styles.modalLabel}>Required Ingredients (Optional)</Text>
-            <View style={styles.ingredientInputContainer}>
-              <TextInput
-                style={[styles.modalInput, styles.ingredientInput]}
-                placeholder="Add ingredient..."
-                placeholderTextColor="#999"
-                value={newIngredient}
-                onChangeText={setNewIngredient}
-                onSubmitEditing={addRequiredIngredient}
-              />
-              <TouchableOpacity 
-                style={styles.addIngredientButton}
-                onPress={addRequiredIngredient}
-              >
-                <Ionicons name="add" size={20} color="#4CAF50" />
-              </TouchableOpacity>
-            </View>
-            
-            {requiredIngredients.length > 0 && (
-              <View style={styles.ingredientsList}>
-                {requiredIngredients.map((ingredient, index) => (
-                  <View key={index} style={styles.ingredientTag}>
-                    <Text style={styles.ingredientTagText}>{ingredient}</Text>
-                    <TouchableOpacity 
-                      onPress={() => removeRequiredIngredient(ingredient)}
-                      style={styles.removeIngredientButton}
+            {Object.entries(filterCategories).map(([category, filters]) => (
+              <View key={category} style={styles.filterCategory}>
+                <Text style={styles.categoryTitle}>
+                  {category === 'cuisines' ? 'Cuisines' :
+                   category === 'difficulties' ? 'Difficulty' :
+                   category === 'cookTime' ? 'Cook Time' :
+                   category === 'dietary' ? 'Dietary' :
+                   category === 'diningTimes' ? 'Dining Times' :
+                   category === 'foodConscious' ? 'Food Conscious' :
+                   category.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())}
+                </Text>
+                <View style={styles.filterTags}>
+                  {filters.map((filter) => (
+                    <TouchableOpacity
+                      key={filter}
+                      style={[
+                        styles.filterTag,
+                        smartFolderFilters.includes(filter) && styles.activeFilterTag
+                      ]}
+                      onPress={() => toggleSmartFolderFilter(filter)}
+                      activeOpacity={0.7}
                     >
-                      <Ionicons name="close" size={16} color="#666" />
+                      <Text style={[
+                        styles.filterTagText,
+                        smartFolderFilters.includes(filter) && styles.activeFilterTagText
+                      ]}>
+                        {filter}
+                      </Text>
                     </TouchableOpacity>
-                  </View>
-                ))}
+                  ))}
+                </View>
               </View>
-            )}
+            ))}
             
             <TouchableOpacity 
               style={[styles.createButton, styles.smartCreateButton]}
@@ -1013,6 +1004,13 @@ const styles = StyleSheet.create({
     color: '#333333',
     marginBottom: 8,
   },
+  modalSubLabel: {
+    fontSize: 14,
+    fontWeight: '400',
+    fontFamily: 'NunitoSans-Regular',
+    color: '#666666',
+    marginBottom: 20,
+  },
   modalInput: {
     backgroundColor: '#fff',
     borderRadius: 12,
@@ -1039,6 +1037,45 @@ const styles = StyleSheet.create({
   },
   smartCreateButton: {
     backgroundColor: '#4CAF50',
+  },
+  // Filter category styles
+  filterCategory: {
+    marginBottom: 24,
+  },
+  categoryTitle: {
+    fontSize: 15,
+    lineHeight: 22,
+    fontWeight: '700',
+    fontFamily: 'NunitoSans',
+    color: '#333333',
+    marginBottom: 15,
+  },
+  filterTags: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 10,
+  },
+  filterTag: {
+    backgroundColor: '#f8f9fa',
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: '#e9ecef',
+  },
+  activeFilterTag: {
+    backgroundColor: '#4CAF50',
+    borderColor: '#4CAF50',
+  },
+  filterTagText: {
+    fontSize: 14,
+    lineHeight: 20,
+    fontWeight: '600',
+    fontFamily: 'NunitoSans',
+    color: '#333333',
+  },
+  activeFilterTagText: {
+    color: '#FFFFFF',
   },
   // Ingredient input styles
   ingredientInputContainer: {
