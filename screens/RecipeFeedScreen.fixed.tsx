@@ -18,6 +18,7 @@ import { useFocusEffect } from '@react-navigation/native';
 import { useRecipeStore } from '../state/recipeStore.fixed';
 import GPTService from '../services/gptService';
 import ImageService from '../services/imageService';
+import HapticService from '../services/hapticService';
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 
@@ -163,7 +164,13 @@ function SwipeableRecipeCard({
       const velocityThreshold = 0.5;
 
       if (Math.abs(dx) > swipeThreshold || Math.abs(vx) > velocityThreshold) {
-        // Swipe detected
+        // Swipe detected - provide immediate haptic feedback
+        if (dx > 0) {
+          HapticService.swipeRight(); // Medium impact for save action
+        } else {
+          HapticService.swipeLeft(); // Light impact for dismiss action
+        }
+        
         const targetX = dx > 0 ? screenWidth : -screenWidth;
         
         Animated.parallel([
@@ -188,6 +195,9 @@ function SwipeableRecipeCard({
             useNativeDriver: true,
           }),
         ]).start(() => {
+          // Strong confirmation haptic when swipe completes
+          HapticService.swipeComplete();
+          
           // Call appropriate callback based on swipe direction
           if (dx > 0) {
             onLike();
@@ -481,6 +491,7 @@ export default function RecipeFeedScreen() {
       // Don't reset currentIndex - keep the user's current position
     } catch (error) {
       console.error('Error generating recipes:', error);
+      HapticService.errorState();
       Alert.alert('Error', 'Failed to generate new recipes. Please try again.');
     } finally {
       setLoading(false);
@@ -512,10 +523,14 @@ export default function RecipeFeedScreen() {
   };
 
   const handleRefresh = () => {
+    HapticService.buttonPress();
     generateNewRecipes();
   };
 
   const handleRecipeTap = (recipe: any) => {
+    // Light haptic feedback for recipe tap
+    HapticService.buttonPress();
+    
     // Add recipe to recently viewed
     addToRecentlyViewed(recipe);
     
@@ -544,6 +559,7 @@ export default function RecipeFeedScreen() {
   };
 
   const handleServingChange = (multiplier: number) => {
+    HapticService.selectionChange();
     setServingMultiplier(multiplier);
   };
 

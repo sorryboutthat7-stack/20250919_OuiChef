@@ -14,6 +14,7 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useRecipeStore } from '../state/recipeStore.fixed';
+import HapticService from '../services/hapticService';
 
 // Mock data for demonstration
 const mockSavedRecipes = [
@@ -153,6 +154,7 @@ export default function SavedRecipesScreen() {
   // Create new folder
   const handleCreateFolder = () => {
     if (!newFolderName.trim()) {
+      HapticService.errorState();
       Alert.alert('Error', 'Please enter a folder name');
       return;
     }
@@ -168,12 +170,14 @@ export default function SavedRecipesScreen() {
     };
     
     addFolder(newFolder);
+    HapticService.successState();
     setNewFolderName('');
     setShowNewFolderModal(false);
   };
 
   // Handle folder selection
   const handleFolderPress = (folder: any) => {
+    HapticService.buttonPress();
     setSelectedFolder(folder);
     setShowFolderRecipes(true);
   };
@@ -246,6 +250,9 @@ export default function SavedRecipesScreen() {
 
   // Handle recipe tap to show details
   const handleRecipeTap = (recipe: any) => {
+    // Light haptic feedback for recipe tap
+    HapticService.buttonPress();
+    
     // Add recipe to recently viewed
     addToRecentlyViewed(recipe);
     
@@ -424,6 +431,7 @@ export default function SavedRecipesScreen() {
 
   // Handle serving size change
   const handleServingChange = (multiplier: number) => {
+    HapticService.selectionChange();
     setServingMultiplier(multiplier);
   };
 
@@ -485,7 +493,10 @@ export default function SavedRecipesScreen() {
       {/* Heart icon in top right */}
       <TouchableOpacity 
         style={styles.heartButton}
-        onPress={() => removeRecipe(item.id)}
+        onPress={() => {
+          HapticService.buttonPress();
+          removeRecipe(item.id);
+        }}
         activeOpacity={0.7}
       >
         <Ionicons name="heart" size={20} color="#FF6B6B" />
@@ -624,7 +635,10 @@ export default function SavedRecipesScreen() {
                 return (
                   <TouchableOpacity 
                     style={[styles.newFolderButton, styles.regularFolderButton]}
-                    onPress={() => setShowNewFolderModal(true)}
+                    onPress={() => {
+                      HapticService.buttonPress();
+                      setShowNewFolderModal(true);
+                    }}
                     activeOpacity={0.8}
                   >
                     <Ionicons name="add" size={24} color="#fff" />
@@ -635,7 +649,10 @@ export default function SavedRecipesScreen() {
                 return (
                   <TouchableOpacity 
                     style={[styles.newFolderButton, styles.smartFolderButton]}
-                    onPress={() => setShowNewSmartFolderModal(true)}
+                    onPress={() => {
+                      HapticService.buttonPress();
+                      setShowNewSmartFolderModal(true);
+                    }}
                     activeOpacity={0.8}
                   >
                     <Ionicons name="flash" size={18} color="#fff" />

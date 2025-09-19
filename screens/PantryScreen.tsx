@@ -2,6 +2,7 @@
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, ScrollView, Alert, SafeAreaView, Animated, Image } from "react-native";
 import { Ionicons } from '@expo/vector-icons';
 import { useRecipeStore } from '../state/recipeStore.fixed';
+import HapticService from '../services/hapticService';
 
 export default function PantryScreen() {
   const [ingredients, setIngredients] = useState("");
@@ -82,6 +83,7 @@ export default function PantryScreen() {
 
   const addIngredients = () => {
     if (!ingredients.trim()) {
+      HapticService.errorState();
       Alert.alert("Error", "Please enter some ingredients");
       return;
     }
@@ -91,7 +93,7 @@ export default function PantryScreen() {
       .map(item => item.trim())
       .filter(item => item.length > 0);
 
-    // Add each item to the global store
+    // Add each item to the global store with haptic feedback for each
     newItems.forEach((item, index) => {
       addPantryItem({
         id: `pantry-${Date.now()}-${index}`,
@@ -99,15 +101,19 @@ export default function PantryScreen() {
         category: 'general',
         addedAt: new Date().toISOString()
       });
+      // Light haptic for each ingredient chip creation
+      HapticService.ingredientAdded();
     });
     
     setIngredients("");
+    HapticService.successState();
     Alert.alert("Success", "Ingredients added to your pantry!");
   };
 
   const removeIngredient = (index: number) => {
     const itemToRemove = pantryItems[index];
     if (itemToRemove) {
+      HapticService.buttonPress();
       removePantryItem(itemToRemove.id);
     }
   };
@@ -190,6 +196,7 @@ export default function PantryScreen() {
                           activeFilters.includes(filter) && styles.activeFilterTag
                         ]}
                         onPress={() => {
+                          HapticService.filterChanged();
                           const newActiveFilters = activeFilters.includes(filter)
                             ? activeFilters.filter(f => f !== filter)
                             : [...activeFilters, filter];
@@ -283,6 +290,7 @@ export default function PantryScreen() {
               <TouchableOpacity
                 style={styles.clearAllButton}
                 onPress={() => {
+                  HapticService.buttonPress();
                   Alert.alert(
                     "Clear All Items",
                     "Are you sure you want to remove all ingredients from your pantry?",
@@ -292,6 +300,7 @@ export default function PantryScreen() {
                         text: "Clear All", 
                         style: "destructive",
                         onPress: () => {
+                          HapticService.successState();
                           // Clear all pantry items from the store
                           pantryItems.forEach(item => removePantryItem(item.id));
                         }
