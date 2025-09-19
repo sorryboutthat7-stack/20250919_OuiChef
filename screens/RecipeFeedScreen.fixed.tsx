@@ -563,6 +563,47 @@ export default function RecipeFeedScreen() {
     return missingIngredients;
   };
 
+  // Function to scale calories based on serving size
+  const scaleCalories = (caloriesText: string, multiplier: number): string => {
+    if (multiplier === 1) return caloriesText;
+    
+    // Extract number from calories text (e.g., "450 cal" -> 450)
+    const match = caloriesText.match(/(\d+)/);
+    if (!match) return caloriesText;
+    
+    const originalCalories = parseInt(match[1]);
+    const scaledCalories = Math.round(originalCalories * multiplier);
+    
+    return caloriesText.replace(/\d+/, scaledCalories.toString());
+  };
+
+  // Function to adjust cook time based on serving size
+  const adjustCookTime = (cookTimeText: string, multiplier: number): string => {
+    if (multiplier === 1) return cookTimeText;
+    
+    // Extract number from cook time text (e.g., "25 min" -> 25)
+    const match = cookTimeText.match(/(\d+)/);
+    if (!match) return cookTimeText;
+    
+    const originalTime = parseInt(match[1]);
+    
+    // Cook time doesn't scale linearly - larger batches might take slightly longer
+    // but not proportionally. Use a more conservative scaling.
+    let adjustedTime: number;
+    if (multiplier <= 0.5) {
+      // Smaller batches cook faster
+      adjustedTime = Math.round(originalTime * 0.8);
+    } else if (multiplier >= 2) {
+      // Larger batches take a bit longer
+      adjustedTime = Math.round(originalTime * 1.2);
+    } else {
+      // Close to original serving size, minimal adjustment
+      adjustedTime = originalTime;
+    }
+    
+    return cookTimeText.replace(/\d+/, adjustedTime.toString());
+  };
+
   // Function to format quantities as fractions when possible
   const formatQuantityAsFraction = (value: number): string => {
     // If it's a whole number, return as is
@@ -772,7 +813,7 @@ export default function RecipeFeedScreen() {
                 <View style={[styles.modalDetails, styles.detailsWithBackground]}>
                   <View style={styles.modalDetailItemLeft}>
                     <Ionicons name="time-outline" size={20} color="#FF6B6B" />
-                    <Text style={styles.modalDetailText}>{selectedRecipe.cookTime}</Text>
+                    <Text style={styles.modalDetailText}>{adjustCookTime(selectedRecipe.cookTime, servingMultiplier)}</Text>
                   </View>
                   <View style={styles.modalDetailItemCenter}>
                     <Ionicons name="trending-up-outline" size={20} color="#FF6B6B" />
@@ -780,7 +821,7 @@ export default function RecipeFeedScreen() {
                   </View>
                   <View style={styles.modalDetailItemRight}>
                     <Ionicons name="flame-outline" size={20} color="#FF6B6B" />
-                    <Text style={styles.modalDetailText}>{selectedRecipe.calories}</Text>
+                    <Text style={styles.modalDetailText}>{scaleCalories(selectedRecipe.calories, servingMultiplier)}</Text>
                   </View>
                 </View>
 
