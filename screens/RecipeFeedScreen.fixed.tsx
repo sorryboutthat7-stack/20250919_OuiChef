@@ -255,7 +255,7 @@ function SwipeableRecipeCard({
         {/* Recipe Info Overlay */}
         <View style={styles.recipeOverlay}>
           <Text style={styles.recipeTitle}>{recipe.title}</Text>
-          <Text style={styles.recipeDescription}>{recipe.description}</Text>
+          <Text style={styles.recipeDescription}>{getFirstSentence(recipe.description)}</Text>
           
           <View style={styles.recipeDetails}>
             <View style={styles.detailItemLeft}>
@@ -528,6 +528,20 @@ export default function RecipeFeedScreen() {
 
   const handleServingChange = (multiplier: number) => {
     setServingMultiplier(multiplier);
+  };
+
+  // Function to extract first sentence from description
+  const getFirstSentence = (description: string): string => {
+    if (!description) return '';
+    
+    // Find the first sentence ending with . ! or ?
+    const firstSentenceMatch = description.match(/^[^.!?]*[.!?]/);
+    if (firstSentenceMatch) {
+      return firstSentenceMatch[0].trim();
+    }
+    
+    // If no sentence ending found, return first 100 characters
+    return description.length > 100 ? description.substring(0, 100) + '...' : description;
   };
 
   // Function to determine missing ingredients by comparing recipe with pantry
