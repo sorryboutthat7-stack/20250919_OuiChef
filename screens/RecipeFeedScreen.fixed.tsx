@@ -414,6 +414,61 @@ export default function RecipeFeedScreen() {
     setServingMultiplier(multiplier);
   };
 
+  // Function to scale ingredient quantities based on serving size
+  const scaleIngredientQuantity = (ingredient: string, multiplier: number): string => {
+    if (multiplier === 1) return ingredient; // No scaling needed for 1x serving
+    
+    // Regular expressions to match common quantity patterns
+    const patterns = [
+      // Fractions: 1/2, 1/4, 3/4, etc.
+      { regex: /(\d+\/\d+)/g, type: 'fraction' },
+      // Decimals: 0.5, 1.5, 2.5, etc.
+      { regex: /(\d+\.\d+)/g, type: 'decimal' },
+      // Whole numbers: 1, 2, 3, etc.
+      { regex: /(\d+)/g, type: 'whole' },
+    ];
+
+    let scaledIngredient = ingredient;
+
+    patterns.forEach(({ regex, type }) => {
+      scaledIngredient = scaledIngredient.replace(regex, (match) => {
+        let value: number;
+        
+        if (type === 'fraction') {
+          // Parse fraction (e.g., "1/2" -> 0.5)
+          const [numerator, denominator] = match.split('/').map(Number);
+          value = numerator / denominator;
+        } else if (type === 'decimal') {
+          // Parse decimal (e.g., "1.5" -> 1.5)
+          value = parseFloat(match);
+        } else {
+          // Parse whole number (e.g., "2" -> 2)
+          value = parseInt(match);
+        }
+
+        // Scale the value
+        const scaledValue = value * multiplier;
+
+        // Format the result
+        if (type === 'fraction' || (type === 'decimal' && scaledValue < 1)) {
+          // For small values, try to convert to fractions
+          if (Math.abs(scaledValue - 0.5) < 0.01) return '1/2';
+          if (Math.abs(scaledValue - 0.25) < 0.01) return '1/4';
+          if (Math.abs(scaledValue - 0.75) < 0.01) return '3/4';
+          if (Math.abs(scaledValue - 0.33) < 0.01) return '1/3';
+          if (Math.abs(scaledValue - 0.67) < 0.01) return '2/3';
+          // If no common fraction matches, use decimal
+          return scaledValue.toFixed(1).replace(/\.0$/, '');
+        } else {
+          // For larger values, use whole numbers or one decimal place
+          return scaledValue % 1 === 0 ? scaledValue.toString() : scaledValue.toFixed(1);
+        }
+      });
+    });
+
+    return scaledIngredient;
+  };
+
   if (loading && recipes.length === 0) {
     return (
       <SafeAreaView style={styles.container}>
@@ -566,7 +621,9 @@ export default function RecipeFeedScreen() {
                 <View style={[styles.section, styles.sectionWithBackground]}>
                   <Text style={styles.sectionTitle}>Ingredients</Text>
                   {(selectedRecipe.ingredients || []).map((ingredient: string, index: number) => (
-                    <Text key={index} style={styles.ingredientText}>• {ingredient}</Text>
+                    <Text key={index} style={styles.ingredientText}>
+                      • {scaleIngredientQuantity(ingredient, servingMultiplier)}
+                    </Text>
                   ))}
                 </View>
 
