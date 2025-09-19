@@ -477,12 +477,12 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 4,
     elevation: 4,
-    minHeight: 250,
+    minHeight: 150,
   },
   emptyStateContent: {
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: 60,
+    paddingVertical: 30,
   },
   emptyStateIcon: {
     marginBottom: 12,
