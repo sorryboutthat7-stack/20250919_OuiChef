@@ -365,7 +365,7 @@ export default function SavedRecipesScreen() {
                     onPress={() => setShowNewSmartFolderModal(true)}
                     activeOpacity={0.8}
                   >
-                    <Ionicons name="flash" size={24} color="#fff" />
+                    <Ionicons name="flash" size={20} color="#fff" />
                     <Text style={[styles.newFolderButtonText, { color: '#fff' }]}>New Smart Folder</Text>
                   </TouchableOpacity>
                 );
