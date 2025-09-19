@@ -765,7 +765,7 @@ export default function RecipeFeedScreen() {
       <SafeAreaView style={styles.container}>
         <View style={styles.loadingContainer}>
           <Image 
-            source={require('../assets/coral_outline.gif')} 
+            source={require('../assets/animations/coral_outline.gif')} 
             style={styles.loadingGif}
           />
           <Text style={styles.loadingText}>Generating new recipes...</Text>
