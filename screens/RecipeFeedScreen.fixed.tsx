@@ -1079,9 +1079,17 @@ export default function RecipeFeedScreen() {
 
                 <View style={[styles.section, styles.sectionWithBackground]}>
                   <Text style={styles.sectionTitle}>Instructions</Text>
-                  {(selectedRecipe.instructions || []).map((instruction: string, index: number) => (
-                    <Text key={index} style={styles.instructionText}>Step {index + 1}. {instruction}</Text>
-                  ))}
+                  {(selectedRecipe.instructions || []).map((instruction: string, index: number) => {
+                    // Check if instruction already starts with "Step" to avoid duplication
+                    const cleanInstruction = instruction.trim();
+                    const alreadyHasStep = /^Step\s*\d+[.:]?\s*/i.test(cleanInstruction);
+                    
+                    return (
+                      <Text key={index} style={styles.instructionText}>
+                        {alreadyHasStep ? cleanInstruction : `Step ${index + 1}. ${cleanInstruction}`}
+                      </Text>
+                    );
+                  })}
                 </View>
               </View>
             </ScrollView>
