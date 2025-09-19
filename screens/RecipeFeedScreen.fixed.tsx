@@ -290,6 +290,7 @@ export default function RecipeFeedScreen() {
   // Track previous state to detect changes
   const [previousPantryItems, setPreviousPantryItems] = useState<any[]>([]);
   const [previousFilters, setPreviousFilters] = useState<any>({});
+  const [isGenerating, setIsGenerating] = useState(false);
 
   // Function to check if pantry items have changed
   const pantryItemsChanged = (current: any[], previous: any[]): boolean => {
@@ -312,9 +313,13 @@ export default function RecipeFeedScreen() {
     return currentKeys.some(key => current[key] !== previous[key]);
   };
 
+  // Initial load only - no automatic regeneration on changes
   useEffect(() => {
-    loadRecipes();
-  }, [pantryItems, filters]);
+    // Only load recipes on initial mount, not on every change
+    if (recipes.length === 0) {
+      loadRecipes();
+    }
+  }, []); // Empty dependency array - only run on mount
 
   // Initialize previous state on first load
   useEffect(() => {
@@ -327,6 +332,12 @@ export default function RecipeFeedScreen() {
   // Regenerate recipes when user navigates back to this tab (only if changes detected)
   useFocusEffect(
     React.useCallback(() => {
+      // Prevent multiple simultaneous generations
+      if (isGenerating) {
+        console.log('⏳ Already generating recipes, skipping...');
+        return;
+      }
+
       // Check if pantry items or filters have actually changed
       const pantryChanged = pantryItemsChanged(pantryItems, previousPantryItems);
       const filterChanged = filtersChanged(filters, previousFilters);
@@ -339,6 +350,9 @@ export default function RecipeFeedScreen() {
           filters: Object.keys(filters).filter(k => filters[k])
         });
         
+        // Set generating flag to prevent multiple calls
+        setIsGenerating(true);
+        
         // Clear old recipes and show loading state
         setRecipes([]);
         setCurrentIndex(0);
@@ -349,11 +363,13 @@ export default function RecipeFeedScreen() {
         setPreviousFilters({...filters});
         
         // Generate new recipes
-        loadRecipes();
+        loadRecipes().finally(() => {
+          setIsGenerating(false);
+        });
       } else {
         console.log('📱 Tab focused - no changes detected, keeping current recipes');
       }
-    }, [pantryItems, filters, previousPantryItems, previousFilters])
+    }, [pantryItems, filters, previousPantryItems, previousFilters, isGenerating])
   );
 
   const loadRecipes = async () => {
