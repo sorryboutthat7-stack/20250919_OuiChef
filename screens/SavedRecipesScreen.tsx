@@ -344,7 +344,7 @@ export default function SavedRecipesScreen() {
                 onPress={() => setShowNewFolderModal(true)}
                 activeOpacity={0.8}
               >
-                <Ionicons name="add" size={24} color="#FF6B6B" />
+                <Ionicons name="add" size={40} color="#FF6B6B" />
                 <Text style={styles.newFolderButtonText}>New Folder</Text>
               </TouchableOpacity>
               
@@ -353,7 +353,7 @@ export default function SavedRecipesScreen() {
                 onPress={() => setShowNewSmartFolderModal(true)}
                 activeOpacity={0.8}
               >
-                <Ionicons name="flash" size={24} color="#4CAF50" />
+                <Ionicons name="flash" size={40} color="#4CAF50" />
                 <Text style={[styles.newFolderButtonText, { color: '#4CAF50' }]}>New Smart Folder</Text>
               </TouchableOpacity>
             </View>
@@ -783,19 +783,23 @@ const styles = StyleSheet.create({
   },
   newFolderButtonsContainer: {
     flexDirection: 'row',
-    gap: 12,
+    justifyContent: 'space-between',
     marginBottom: 16,
   },
   newFolderButton: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
     backgroundColor: '#fff',
     borderRadius: 12,
-    padding: 16,
+    width: '48%',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
     borderWidth: 2,
     borderStyle: 'dashed',
+    paddingVertical: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   regularFolderButton: {
     borderColor: '#FF6B6B',
@@ -808,7 +812,8 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     fontFamily: 'NunitoSans-SemiBold',
     color: '#FF6B6B',
-    marginLeft: 8,
+    marginTop: 8,
+    textAlign: 'center',
   },
   folderCard: {
     backgroundColor: '#fff',
