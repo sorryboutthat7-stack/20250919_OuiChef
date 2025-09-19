@@ -303,7 +303,7 @@ function SwipeableRecipeCard({
 }
 
 export default function RecipeFeedScreen() {
-  const { pantryItems, filters, addRecipe, addToRecentlyViewed } = useRecipeStore();
+  const { pantryItems, filters, addRecipe, addToRecentlyViewed, folders, assignRecipeToFolder } = useRecipeStore();
   const [recipes, setRecipes] = useState<any[]>([]);
   const [savedRecipes, setSavedRecipes] = useState<string[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -312,6 +312,8 @@ export default function RecipeFeedScreen() {
   const [modalVisible, setModalVisible] = useState(false);
   const [servingMultiplier, setServingMultiplier] = useState(1);
   const [showOverlay, setShowOverlay] = useState(false);
+  const [showSaveModal, setShowSaveModal] = useState(false);
+  const [selectedFolders, setSelectedFolders] = useState<string[]>([]);
   
   // Track previous state to detect changes
   const [previousPantryItems, setPreviousPantryItems] = useState<any[]>([]);
@@ -612,6 +614,44 @@ export default function RecipeFeedScreen() {
     setModalVisible(false);
     setSelectedRecipe(null);
     setServingMultiplier(1); // Reset serving multiplier when modal closes
+    setSelectedFolders([]); // Reset selected folders
+  };
+
+  const handleSaveRecipe = () => {
+    HapticService.buttonPress();
+    setShowSaveModal(true);
+  };
+
+  const handleSaveToFolders = () => {
+    if (!selectedRecipe) return;
+    
+    HapticService.successState();
+    
+    // Add recipe to saved recipes
+    addRecipe(selectedRecipe);
+    
+    // Assign to selected folders
+    selectedFolders.forEach(folderId => {
+      assignRecipeToFolder(selectedRecipe.id, folderId, true);
+    });
+    
+    // Close modals
+    setShowSaveModal(false);
+    setModalVisible(false);
+    setSelectedRecipe(null);
+    setSelectedFolders([]);
+    setServingMultiplier(1);
+    
+    Alert.alert('Recipe Saved!', 'Recipe has been saved to your collection.');
+  };
+
+  const toggleFolderSelection = (folderId: string) => {
+    HapticService.selectionChange();
+    setSelectedFolders(prev => 
+      prev.includes(folderId) 
+        ? prev.filter(id => id !== folderId)
+        : [...prev, folderId]
+    );
   };
 
   const handleServingChange = (multiplier: number) => {
@@ -1044,6 +1084,18 @@ export default function RecipeFeedScreen() {
                 </View>
               </View>
             </ScrollView>
+            
+            {/* Save Recipe Button */}
+            <View style={styles.saveButtonContainer}>
+              <TouchableOpacity 
+                style={styles.saveButton}
+                onPress={handleSaveRecipe}
+                activeOpacity={0.8}
+              >
+                <Ionicons name="heart" size={20} color="#FFFFFF" style={styles.saveButtonIcon} />
+                <Text style={styles.saveButtonText}>Save Recipe</Text>
+              </TouchableOpacity>
+            </View>
           )}
         </SafeAreaView>
       </Modal>
@@ -1072,6 +1124,87 @@ export default function RecipeFeedScreen() {
           </TouchableOpacity>
         </Animated.View>
       )}
+      
+      {/* Save Recipe Modal */}
+      <Modal
+        visible={showSaveModal}
+        animationType="slide"
+        presentationStyle="pageSheet"
+        onRequestClose={() => setShowSaveModal(false)}
+      >
+        <SafeAreaView style={styles.saveModalContainer}>
+          <View style={styles.saveModalHeader}>
+            <TouchableOpacity 
+              onPress={() => setShowSaveModal(false)} 
+              style={styles.saveModalCloseButton}
+            >
+              <Ionicons name="close" size={24} color="#333" />
+            </TouchableOpacity>
+            <Text style={styles.saveModalTitle}>Save Recipe</Text>
+            <View style={styles.placeholder} />
+          </View>
+          
+          <ScrollView style={styles.saveModalContent}>
+            <Text style={styles.saveModalSubtitle}>Choose where to save this recipe:</Text>
+            
+            {/* General Saved Recipes Option */}
+            <TouchableOpacity 
+              style={[
+                styles.folderOption,
+                selectedFolders.length === 0 && styles.folderOptionSelected
+              ]}
+              onPress={() => setSelectedFolders([])}
+            >
+              <View style={styles.folderOptionLeft}>
+                <Ionicons name="heart" size={24} color="#FF6B6B" />
+                <Text style={styles.folderOptionName}>Saved Recipes</Text>
+              </View>
+              <Ionicons 
+                name={selectedFolders.length === 0 ? "checkmark-circle" : "ellipse-outline"} 
+                size={24} 
+                color={selectedFolders.length === 0 ? "#4CAF50" : "#CCCCCC"} 
+              />
+            </TouchableOpacity>
+            
+            {/* Specific Folders */}
+            {folders.map((folder) => (
+              <TouchableOpacity 
+                key={folder.id}
+                style={[
+                  styles.folderOption,
+                  selectedFolders.includes(folder.id) && styles.folderOptionSelected
+                ]}
+                onPress={() => toggleFolderSelection(folder.id)}
+              >
+                <View style={styles.folderOptionLeft}>
+                  <View style={[styles.folderColorIndicator, { backgroundColor: folder.color }]} />
+                  <Text style={styles.folderOptionName}>{folder.name}</Text>
+                </View>
+                <Ionicons 
+                  name={selectedFolders.includes(folder.id) ? "checkmark-circle" : "ellipse-outline"} 
+                  size={24} 
+                  color={selectedFolders.includes(folder.id) ? "#4CAF50" : "#CCCCCC"} 
+                />
+              </TouchableOpacity>
+            ))}
+          </ScrollView>
+          
+          <View style={styles.saveModalFooter}>
+            <TouchableOpacity 
+              style={styles.cancelButton}
+              onPress={() => setShowSaveModal(false)}
+            >
+              <Text style={styles.cancelButtonText}>Cancel</Text>
+            </TouchableOpacity>
+            <TouchableOpacity 
+              style={styles.confirmSaveButton}
+              onPress={handleSaveToFolders}
+            >
+              <Text style={styles.confirmSaveButtonText}>Save Recipe</Text>
+            </TouchableOpacity>
+          </View>
+        </SafeAreaView>
+      </Modal>
     </SafeAreaView>
   );
 }
@@ -1513,5 +1646,142 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     lineHeight: 22,
     opacity: 0.9,
+  },
+  // Save button styles
+  saveButtonContainer: {
+    padding: 20,
+    backgroundColor: '#FFFFFF',
+    borderTopWidth: 1,
+    borderTopColor: '#E0E0E0',
+  },
+  saveButton: {
+    backgroundColor: '#FF6B6B',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 16,
+    paddingHorizontal: 24,
+    borderRadius: 12,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  saveButtonIcon: {
+    marginRight: 8,
+  },
+  saveButtonText: {
+    fontSize: 18,
+    fontWeight: '600',
+    fontFamily: 'Recoleta-Bold',
+    color: '#FFFFFF',
+  },
+  // Save modal styles
+  saveModalContainer: {
+    flex: 1,
+    backgroundColor: '#FFFFFF',
+  },
+  saveModalHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 20,
+    paddingVertical: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: '#E0E0E0',
+  },
+  saveModalCloseButton: {
+    padding: 8,
+  },
+  saveModalTitle: {
+    fontSize: 20,
+    fontWeight: '600',
+    fontFamily: 'Recoleta-Bold',
+    color: '#333',
+  },
+  saveModalContent: {
+    flex: 1,
+    paddingHorizontal: 20,
+    paddingTop: 20,
+  },
+  saveModalSubtitle: {
+    fontSize: 16,
+    fontFamily: 'NunitoSans-Regular',
+    color: '#666',
+    marginBottom: 20,
+  },
+  folderOption: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: 16,
+    paddingHorizontal: 16,
+    marginBottom: 8,
+    backgroundColor: '#F8F9FA',
+    borderRadius: 12,
+    borderWidth: 2,
+    borderColor: 'transparent',
+  },
+  folderOptionSelected: {
+    borderColor: '#4CAF50',
+    backgroundColor: '#F1F8E9',
+  },
+  folderOptionLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+  },
+  folderColorIndicator: {
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    marginRight: 12,
+  },
+  folderOptionName: {
+    fontSize: 16,
+    fontWeight: '500',
+    fontFamily: 'NunitoSans-Medium',
+    color: '#333',
+  },
+  saveModalFooter: {
+    flexDirection: 'row',
+    paddingHorizontal: 20,
+    paddingVertical: 16,
+    borderTopWidth: 1,
+    borderTopColor: '#E0E0E0',
+    gap: 12,
+  },
+  cancelButton: {
+    flex: 1,
+    paddingVertical: 16,
+    paddingHorizontal: 24,
+    borderRadius: 12,
+    borderWidth: 2,
+    borderColor: '#E0E0E0',
+    alignItems: 'center',
+  },
+  cancelButtonText: {
+    fontSize: 16,
+    fontWeight: '600',
+    fontFamily: 'NunitoSans-SemiBold',
+    color: '#666',
+  },
+  confirmSaveButton: {
+    flex: 1,
+    paddingVertical: 16,
+    paddingHorizontal: 24,
+    borderRadius: 12,
+    backgroundColor: '#4CAF50',
+    alignItems: 'center',
+  },
+  confirmSaveButtonText: {
+    fontSize: 16,
+    fontWeight: '600',
+    fontFamily: 'NunitoSans-SemiBold',
+    color: '#FFFFFF',
   },
 });
