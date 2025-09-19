@@ -278,7 +278,7 @@ function SwipeableRecipeCard({
 }
 
 export default function RecipeFeedScreen() {
-  const { pantryItems, filters } = useRecipeStore();
+  const { pantryItems, filters, addRecipe } = useRecipeStore();
   const [recipes, setRecipes] = useState<any[]>([]);
   const [savedRecipes, setSavedRecipes] = useState<string[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -467,7 +467,8 @@ export default function RecipeFeedScreen() {
   };
 
   const handleLike = (recipe: any) => {
-    setSavedRecipes(prev => [...prev, recipe.id]);
+    // Save recipe to global store
+    addRecipe(recipe);
     setCurrentIndex(prev => prev + 1);
   };
 

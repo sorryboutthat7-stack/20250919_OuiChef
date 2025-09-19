@@ -11,6 +11,7 @@ import {
   TextInput,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useRecipeStore } from '../state/recipeStore.fixed';
 
 // Mock data for demonstration
 const mockSavedRecipes = [
@@ -100,24 +101,28 @@ export default function SavedRecipesScreen() {
   const [activeTab, setActiveTab] = useState<TabType>('saved');
   const [searchQuery, setSearchQuery] = useState('');
   const [showSearch, setShowSearch] = useState(false);
+  
+  // Get saved recipes from global store
+  const { savedRecipes, removeRecipe } = useRecipeStore();
 
   const renderRecipeCard = ({ item }: { item: any }) => (
     <TouchableOpacity style={styles.recipeCard} activeOpacity={0.8}>
-      <Image source={{ uri: item.image }} style={styles.recipeImage} />
+      <Image source={{ uri: item.imageUrl || item.image }} style={styles.recipeImage} />
       <View style={styles.recipeInfo}>
         <Text style={styles.recipeTitle} numberOfLines={2}>
           {item.title}
         </Text>
-        <Text style={styles.recipeAuthor}>{item.author}</Text>
+        <Text style={styles.recipeAuthor}>GPT Generated</Text>
         <View style={styles.recipeMetadata}>
           <Ionicons name="time-outline" size={14} color="#666" />
-          <Text style={styles.cookTime}>{item.cookTime}</Text>
-          {item.folder && (
-            <>
-              <Ionicons name="folder-outline" size={14} color="#666" style={styles.folderIcon} />
-              <Text style={styles.folderName}>{item.folder}</Text>
-            </>
-          )}
+          <Text style={styles.cookTime}>{item.cookTime || item.cook_time}</Text>
+          <TouchableOpacity 
+            style={styles.removeButton}
+            onPress={() => removeRecipe(item.id)}
+            activeOpacity={0.7}
+          >
+            <Ionicons name="heart" size={16} color="#FF6B6B" />
+          </TouchableOpacity>
         </View>
       </View>
     </TouchableOpacity>
@@ -154,10 +159,10 @@ export default function SavedRecipesScreen() {
   const renderContent = () => {
     switch (activeTab) {
       case 'saved':
-        return (
+        return savedRecipes.length > 0 ? (
           <FlatList
             key="saved-recipes-grid"
-            data={mockSavedRecipes}
+            data={savedRecipes}
             renderItem={renderRecipeCard}
             keyExtractor={(item) => item.id}
             numColumns={2}
@@ -165,6 +170,14 @@ export default function SavedRecipesScreen() {
             contentContainerStyle={styles.gridContainer}
             showsVerticalScrollIndicator={false}
           />
+        ) : (
+          <View style={styles.emptyState}>
+            <Ionicons name="heart-outline" size={80} color="#FF6B6B" />
+            <Text style={styles.emptyStateTitle}>No Saved Recipes Yet</Text>
+            <Text style={styles.emptyStateSubtitle}>
+              Swipe right on recipe cards in the Find Recipes tab to save your favorites!
+            </Text>
+          </View>
         );
       case 'folders':
         return (
@@ -503,5 +516,35 @@ const styles = StyleSheet.create({
     fontFamily: 'NunitoSans-Regular',
     color: '#999999',
     marginLeft: 12,
+  },
+  // Remove button
+  removeButton: {
+    marginLeft: 'auto',
+    padding: 4,
+  },
+  // Empty state
+  emptyState: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 40,
+  },
+  emptyStateTitle: {
+    fontSize: 24,
+    lineHeight: 30,
+    fontWeight: 'bold',
+    fontFamily: 'Recoleta-Bold',
+    color: '#333333',
+    marginTop: 20,
+    marginBottom: 10,
+    textAlign: 'center',
+  },
+  emptyStateSubtitle: {
+    fontSize: 16,
+    lineHeight: 24,
+    fontWeight: '400',
+    fontFamily: 'NunitoSans-Regular',
+    color: '#666666',
+    textAlign: 'center',
   },
 });
