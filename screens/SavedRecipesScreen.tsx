@@ -365,8 +365,8 @@ export default function SavedRecipesScreen() {
                     onPress={() => setShowNewSmartFolderModal(true)}
                     activeOpacity={0.8}
                   >
-                    <Ionicons name="flash" size={24} color="#4CAF50" />
-                    <Text style={[styles.newFolderButtonText, { color: '#4CAF50' }]}>New Smart Folder</Text>
+                    <Ionicons name="flash" size={24} color="#fff" />
+                    <Text style={[styles.newFolderButtonText, { color: '#fff' }]}>New Smart Folder</Text>
                   </TouchableOpacity>
                 );
               } else {
@@ -801,7 +801,7 @@ const styles = StyleSheet.create({
     borderColor: '#FF6B6B',
   },
   smartFolderButton: {
-    borderColor: '#4CAF50',
+    backgroundColor: '#FF6B6B',
   },
   newFolderButtonText: {
     fontSize: 14,
