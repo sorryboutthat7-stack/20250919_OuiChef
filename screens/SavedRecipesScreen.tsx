@@ -1,4 +1,4 @@
-﻿import React, { useState } from 'react';
+﻿import React, { useState, useRef } from 'react';
 import {
   View,
   Text,
@@ -11,6 +11,7 @@ import {
   TextInput,
   Modal,
   Alert,
+  Animated,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useRecipeStore } from '../state/recipeStore.fixed';
@@ -120,6 +121,53 @@ export default function SavedRecipesScreen() {
   const [showRecipeDetails, setShowRecipeDetails] = useState(false);
   const [servingMultiplier, setServingMultiplier] = useState(1);
   
+  // Save recipe functionality
+  const [showSaveSheet, setShowSaveSheet] = useState(false);
+  const [showSaveAnimation, setShowSaveAnimation] = useState(false);
+  const saveAnimationScale = useRef(new Animated.Value(1)).current;
+  const saveAnimationOpacity = useRef(new Animated.Value(0)).current;
+  const sparkleOpacity = useRef(new Animated.Value(0)).current;
+  const sparkleScale = useRef(new Animated.Value(0.5)).current;
+  
+  // Animation for bottom sheet
+  const bottomSheetTranslateY = useRef(new Animated.Value(300)).current;
+  const backdropOpacity = useRef(new Animated.Value(0)).current;
+
+  // Animation effects for bottom sheet
+  React.useEffect(() => {
+    if (showSaveSheet) {
+      // Slide up animation
+      Animated.parallel([
+        Animated.spring(bottomSheetTranslateY, {
+          toValue: 0,
+          useNativeDriver: true,
+          tension: 100,
+          friction: 8,
+        }),
+        Animated.timing(backdropOpacity, {
+          toValue: 1,
+          duration: 300,
+          useNativeDriver: true,
+        }),
+      ]).start();
+    } else {
+      // Slide down animation
+      Animated.parallel([
+        Animated.spring(bottomSheetTranslateY, {
+          toValue: 300,
+          useNativeDriver: true,
+          tension: 100,
+          friction: 8,
+        }),
+        Animated.timing(backdropOpacity, {
+          toValue: 0,
+          duration: 300,
+          useNativeDriver: true,
+        }),
+      ]).start();
+    }
+  }, [showSaveSheet]);
+  
   // Smart folder filter state
   const [smartFolderName, setSmartFolderName] = useState('');
   const [smartFolderFilters, setSmartFolderFilters] = useState<string[]>([]);
@@ -135,7 +183,7 @@ export default function SavedRecipesScreen() {
   };
   
   // Get saved recipes and folders from global store
-  const { savedRecipes, removeRecipe, folders, getRecipesInFolder, addFolder, pantryItems, addToRecentlyViewed } = useRecipeStore();
+  const { savedRecipes, removeRecipe, folders, getRecipesInFolder, addFolder, pantryItems, addToRecentlyViewed, addRecipe, assignRecipeToFolder } = useRecipeStore();
 
   // Filter recipes based on search query
   const filteredSavedRecipes = savedRecipes.filter(recipe => {
@@ -273,6 +321,112 @@ export default function SavedRecipesScreen() {
     setShowRecipeDetails(false);
     setSelectedRecipe(null);
     setServingMultiplier(1);
+  };
+
+  // Save recipe functionality
+  const handleSaveRecipe = () => {
+    HapticService.buttonPress();
+    setShowSaveSheet(true);
+  };
+
+  const handleCloseSaveSheet = () => {
+    setShowSaveSheet(false);
+  };
+
+  const handleSaveToSpecificFolder = (folderId: string | null) => {
+    if (!selectedRecipe) return;
+    
+    // Check if recipe is already saved and in the specific folder
+    const isAlreadySaved = useRecipeStore.getState().isRecipeSaved(selectedRecipe.id);
+    const isAlreadyInFolder = folderId ? useRecipeStore.getState().isRecipeInFolder(selectedRecipe.id, folderId) : false;
+    
+    // Trigger save animation immediately over the recipe details
+    triggerSaveAnimation();
+    
+    HapticService.successState();
+    
+    // Add recipe to saved recipes (will be ignored if already exists)
+    addRecipe(selectedRecipe);
+    
+    // Assign to specific folder if provided
+    if (folderId) {
+      assignRecipeToFolder(selectedRecipe.id, folderId, true);
+    }
+    
+    // Close save sheet only (keep recipe details modal open)
+    setShowSaveSheet(false);
+  };
+
+  // Function to trigger save animation
+  const triggerSaveAnimation = () => {
+    setShowSaveAnimation(true);
+    
+    // Reset animation values
+    saveAnimationScale.setValue(1);
+    saveAnimationOpacity.setValue(0);
+    sparkleOpacity.setValue(0);
+    sparkleScale.setValue(0.5);
+    
+    // Animate the bookmark icon with even slower, more elegant effect
+    Animated.sequence([
+      // Scale up more slowly
+      Animated.timing(saveAnimationScale, {
+        toValue: 1.4,
+        duration: 280,
+        useNativeDriver: true,
+      }),
+      // Bounce back with gentler spring
+      Animated.spring(saveAnimationScale, {
+        toValue: 1,
+        tension: 50,
+        friction: 7,
+        useNativeDriver: true,
+      }),
+    ]).start();
+    
+    // Animate sparkle effect with even slower timing
+    Animated.parallel([
+      Animated.sequence([
+        Animated.timing(sparkleOpacity, {
+          toValue: 1,
+          duration: 320,
+          useNativeDriver: true,
+        }),
+        Animated.timing(sparkleOpacity, {
+          toValue: 0,
+          duration: 500,
+          useNativeDriver: true,
+        }),
+      ]),
+      Animated.sequence([
+        Animated.timing(sparkleScale, {
+          toValue: 1.2,
+          duration: 320,
+          useNativeDriver: true,
+        }),
+        Animated.timing(sparkleScale, {
+          toValue: 0.8,
+          duration: 500,
+          useNativeDriver: true,
+        }),
+      ]),
+    ]).start();
+    
+    // Fade in/out the animation overlay with even slower timing
+    Animated.sequence([
+      Animated.timing(saveAnimationOpacity, {
+        toValue: 1,
+        duration: 250,
+        useNativeDriver: true,
+      }),
+      Animated.timing(saveAnimationOpacity, {
+        toValue: 0,
+        duration: 600,
+        useNativeDriver: true,
+      }),
+    ]).start(() => {
+      setShowSaveAnimation(false);
+    });
   };
 
   // Function to format quantities as fractions
@@ -541,8 +695,8 @@ export default function SavedRecipesScreen() {
         onPress={() => handleFolderPress(item)}
       >
         <View style={styles.folderThumbnail}>
-          {firstRecipe && firstRecipe.imageUrl ? (
-            <Image source={{ uri: firstRecipe.imageUrl }} style={styles.folderThumbnailImage} />
+          {firstRecipe && (firstRecipe.imageUrl || firstRecipe.image) ? (
+            <Image source={{ uri: firstRecipe.imageUrl || firstRecipe.image }} style={styles.folderThumbnailImage} />
           ) : (
             <View style={[styles.folderThumbnailFallback, { backgroundColor: '#fff' }]}>
               <Ionicons name="restaurant" size={40} color="#999" />
@@ -637,7 +791,7 @@ export default function SavedRecipesScreen() {
             key="folders-grid"
             data={combinedData}
             renderItem={({ item }) => {
-              if (item.type === 'new-folder') {
+              if ('type' in item && item.type === 'new-folder') {
                 return (
                   <TouchableOpacity 
                     style={[styles.newFolderButton, styles.regularFolderButton]}
@@ -651,7 +805,7 @@ export default function SavedRecipesScreen() {
                     <Text style={styles.newFolderButtonText}>New Folder</Text>
                   </TouchableOpacity>
                 );
-              } else if (item.type === 'new-smart-folder') {
+              } else if ('type' in item && item.type === 'new-smart-folder') {
                 return (
                   <TouchableOpacity 
                     style={[styles.newFolderButton, styles.smartFolderButton]}
@@ -808,7 +962,7 @@ export default function SavedRecipesScreen() {
               <Text style={styles.createButtonText}>Create Folder</Text>
             </TouchableOpacity>
           </View>
-        </SafeAreaView>
+    </SafeAreaView>
       </Modal>
 
       {/* New Smart Folder Modal */}
@@ -951,7 +1105,8 @@ export default function SavedRecipesScreen() {
           </View>
           
           {selectedRecipe && (
-            <ScrollView style={styles.modalContent}>
+            <>
+              <ScrollView style={styles.modalContent}>
               <Image 
                 source={{ uri: selectedRecipe.imageUrl || selectedRecipe.image }} 
                 style={styles.modalImage} 
@@ -1086,6 +1241,128 @@ export default function SavedRecipesScreen() {
                 </View>
               </View>
             </ScrollView>
+            
+            {/* Save Recipe Banner */}
+            <View style={styles.saveRecipeBanner}>
+              <TouchableOpacity 
+                style={styles.saveRecipeBannerButton}
+                onPress={handleSaveRecipe}
+                activeOpacity={0.8}
+              >
+                <Ionicons name="heart" size={20} color="#FFFFFF" style={styles.saveRecipeBannerButtonIcon} />
+                <Text style={styles.saveRecipeBannerButtonText}>Save Recipe</Text>
+              </TouchableOpacity>
+            </View>
+            
+            {/* Save Recipe Modal - Inside Recipe Detail Modal */}
+            {showSaveSheet && (
+              <View style={styles.bottomSheetOverlay}>
+                <Animated.View 
+                  style={[
+                    styles.bottomSheetBackdrop,
+                    { opacity: backdropOpacity }
+                  ]}
+                >
+                  <TouchableOpacity 
+                    style={{ flex: 1 }}
+                    activeOpacity={1}
+                    onPress={handleCloseSaveSheet}
+                  />
+                </Animated.View>
+                <Animated.View 
+                  style={[
+                    styles.bottomSheetContainer,
+                    {
+                      transform: [{ translateY: bottomSheetTranslateY }]
+                    }
+                  ]}
+                >
+                  <View style={styles.bottomSheetHandle} />
+                  <View style={styles.bottomSheetContent}>
+                    <Text style={styles.bottomSheetTitle}>Save Recipe</Text>
+                    
+                    <ScrollView 
+                      style={styles.folderScrollView}
+                      contentContainerStyle={styles.folderScrollContent}
+                      showsVerticalScrollIndicator={false}
+                      bounces={true}
+                    >
+                      {/* General Collection Option */}
+                      <TouchableOpacity 
+                        style={styles.folderOption}
+                        onPress={() => {
+                          HapticService.selectionChange();
+                          handleSaveToSpecificFolder(null);
+                        }}
+                        activeOpacity={0.7}
+                      >
+                        <View style={styles.folderOptionContent}>
+                          <View style={styles.folderIconContainer}>
+                            <Ionicons name="bookmark-outline" size={24} color="#FF6B6B" />
+                          </View>
+                          <Text style={styles.folderOptionText}>General Collection</Text>
+                        </View>
+                      </TouchableOpacity>
+                      
+                      {/* Custom Folders */}
+                      {folders.map((folder) => (
+                        <TouchableOpacity 
+                          key={folder.id}
+                          style={styles.folderOption}
+                          onPress={() => {
+                            HapticService.selectionChange();
+                            handleSaveToSpecificFolder(folder.id);
+                          }}
+                          activeOpacity={0.7}
+                        >
+                          <View style={styles.folderOptionContent}>
+                            <View style={styles.folderIconContainer}>
+                              <Ionicons name="bookmark-outline" size={24} color="#FF6B6B" />
+                            </View>
+                            <Text style={styles.folderOptionText}>{folder.name}</Text>
+                          </View>
+                        </TouchableOpacity>
+                      ))}
+                    </ScrollView>
+                  </View>
+                </Animated.View>
+              </View>
+            )}
+            
+            {/* Save Animation Overlay - Inside Recipe Detail Modal */}
+            {showSaveAnimation && (
+              <Animated.View 
+                style={[
+                  styles.saveAnimationOverlay,
+                  { opacity: saveAnimationOpacity }
+                ]}
+                pointerEvents="none"
+              >
+                {/* Sparkle effect */}
+                <Animated.View 
+                  style={[
+                    styles.sparkleEffect,
+                    { 
+                      opacity: sparkleOpacity,
+                      transform: [{ scale: sparkleScale }]
+                    }
+                  ]}
+                >
+                  <Ionicons name="sparkles" size={40} color="#FFD700" />
+                </Animated.View>
+                
+                {/* Main bookmark icon */}
+                <Animated.View 
+                  style={[
+                    styles.saveAnimationIcon,
+                    { transform: [{ scale: saveAnimationScale }] }
+                  ]}
+                >
+                  <Ionicons name="bookmark" size={60} color="#FF6B6B" />
+                </Animated.View>
+              </Animated.View>
+            )}
+            </>
           )}
         </SafeAreaView>
       </Modal>
@@ -1306,7 +1583,7 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'space-between',
   },
-  folderName: {
+  folderTitle: {
     fontSize: 16,
     lineHeight: 22,
     fontWeight: '600',
@@ -1791,5 +2068,173 @@ const styles = StyleSheet.create({
   },
   removeIngredientButton: {
     padding: 2,
+  },
+  // Save Recipe Banner Styles
+  saveRecipeBanner: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    backgroundColor: '#FFFFFF',
+    borderTopWidth: 1,
+    borderTopColor: '#E0E0E0',
+    paddingTop: 16,
+    paddingBottom: 20,
+    paddingHorizontal: 20,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: -2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 5,
+  },
+  saveRecipeBannerButton: {
+    backgroundColor: '#FF6B6B',
+    paddingVertical: 16,
+    paddingHorizontal: 24,
+    borderRadius: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    width: '100%',
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  saveRecipeBannerButtonIcon: {
+    marginRight: 8,
+  },
+  saveRecipeBannerButtonText: {
+    fontSize: 18,
+    fontWeight: '600',
+    fontFamily: 'Recoleta-Bold',
+    color: '#FFFFFF',
+  },
+  // Bottom Sheet Styles
+  bottomSheetOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    zIndex: 1000,
+  },
+  bottomSheetBackdrop: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+  },
+  bottomSheetContainer: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    backgroundColor: '#FFFFFF',
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    minHeight: 300,
+    maxHeight: '75%',
+    paddingBottom: 50,
+  },
+  bottomSheetHandle: {
+    width: 40,
+    height: 4,
+    backgroundColor: '#CCCCCC',
+    borderRadius: 2,
+    alignSelf: 'center',
+    marginTop: 12,
+    marginBottom: 8,
+  },
+  bottomSheetContent: {
+    paddingHorizontal: 20,
+    flex: 1,
+  },
+  bottomSheetTitle: {
+    fontSize: 20,
+    fontWeight: '600',
+    fontFamily: 'Recoleta-Bold',
+    color: '#333',
+    marginBottom: 20,
+    textAlign: 'center',
+  },
+  folderScrollView: {
+    flex: 1,
+    marginTop: 10,
+  },
+  folderScrollContent: {
+    paddingBottom: 40,
+  },
+  folderOption: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: 16,
+    paddingHorizontal: 16,
+    backgroundColor: '#F8F9FA',
+    borderRadius: 12,
+    marginBottom: 12,
+  },
+  folderOptionContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+  },
+  folderIconContainer: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: '#F0F0F0',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 12,
+  },
+  folderOptionText: {
+    fontSize: 16,
+    fontFamily: 'NunitoSans-Regular',
+    color: '#333',
+    flex: 1,
+  },
+  // Save Animation Styles
+  saveAnimationOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 1000,
+    pointerEvents: 'none',
+  },
+  saveAnimationIcon: {
+    backgroundColor: 'rgba(255, 255, 255, 0.95)',
+    borderRadius: 60,
+    padding: 25,
+    shadowColor: '#FF6B6B',
+    shadowOffset: {
+      width: 0,
+      height: 8,
+    },
+    shadowOpacity: 0.4,
+    shadowRadius: 12,
+    elevation: 12,
+    borderWidth: 3,
+    borderColor: 'rgba(255, 107, 107, 0.3)',
+  },
+  sparkleEffect: {
+    position: 'absolute',
+    top: -20,
+    right: -20,
+    zIndex: 1001,
   },
 });

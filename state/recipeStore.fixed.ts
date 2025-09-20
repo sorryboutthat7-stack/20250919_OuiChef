@@ -81,7 +81,7 @@ interface RecipeStore {
   addFolder: (folder: RecipeFolder) => void;
   removeFolder: (folderId: string) => void;
   updateFolder: (folderId: string, updates: Partial<RecipeFolder>) => void;
-  assignRecipeToFolder: (recipeId: string, folderId: string | null) => void;
+  assignRecipeToFolder: (recipeId: string, folderId: string, assign: boolean) => void;
   getRecipesInFolder: (folderId: string) => AppRecipe[];
   isRecipeInFolder: (recipeId: string, folderId: string) => boolean;
   // Recently viewed methods
