@@ -20,9 +20,11 @@ export default {
       backgroundColor: "#ffffff"
     },
     ios: {
+      bundleIdentifier: "com.chevuoi.ouichef",
       supportsTablet: true
     },
     android: {
+      package: "com.chevuoi.ouichef",
       adaptiveIcon: {
         foregroundImage: "./assets/adaptive-icon.png",
         backgroundColor: "#ffffff"
@@ -35,6 +37,9 @@ export default {
     extra: {
       EXPO_PUBLIC_OPENAI_API_KEY: process.env.EXPO_PUBLIC_OPENAI_API_KEY,
       EXPO_PUBLIC_UNSPLASH_ACCESS_KEY: process.env.EXPO_PUBLIC_UNSPLASH_ACCESS_KEY,
+      eas: {
+        projectId: "2b3529d5-db6c-4fe0-8cf6-4843cca13d21"
+      }
     },
   },
 };
