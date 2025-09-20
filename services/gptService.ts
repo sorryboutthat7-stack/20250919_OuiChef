@@ -4,6 +4,7 @@ import Constants from 'expo-constants';
 const OPENAI_API_KEY = 
   Constants.expoConfig?.extra?.EXPO_PUBLIC_OPENAI_API_KEY ||
   Constants.manifest?.extra?.EXPO_PUBLIC_OPENAI_API_KEY ||
+  process.env.EXPO_PUBLIC_OPENAI_API_KEY ||
   'your-api-key-here';
 const OPENAI_API_URL = 'https://api.openai.com/v1/chat/completions';
 
@@ -11,6 +12,7 @@ const OPENAI_API_URL = 'https://api.openai.com/v1/chat/completions';
 console.log('GPT Service - Environment check:');
 console.log('Constants.expoConfig?.extra?.EXPO_PUBLIC_OPENAI_API_KEY exists:', !!Constants.expoConfig?.extra?.EXPO_PUBLIC_OPENAI_API_KEY);
 console.log('Constants.manifest?.extra?.EXPO_PUBLIC_OPENAI_API_KEY exists:', !!Constants.manifest?.extra?.EXPO_PUBLIC_OPENAI_API_KEY);
+console.log('process.env.EXPO_PUBLIC_OPENAI_API_KEY exists:', !!process.env.EXPO_PUBLIC_OPENAI_API_KEY);
 console.log('OPENAI_KEY in TestFlight:', OPENAI_API_KEY ? OPENAI_API_KEY.substring(0, 8) : 'NOT FOUND');
 console.log('Constants.expoConfig extra:', Constants.expoConfig?.extra);
 console.log('Constants.manifest extra:', Constants.manifest?.extra);
