@@ -83,6 +83,7 @@ interface RecipeStore {
   updateFolder: (folderId: string, updates: Partial<RecipeFolder>) => void;
   assignRecipeToFolder: (recipeId: string, folderId: string | null) => void;
   getRecipesInFolder: (folderId: string) => AppRecipe[];
+  isRecipeInFolder: (recipeId: string, folderId: string) => boolean;
   // Recently viewed methods
   addToRecentlyViewed: (recipe: AppRecipe) => void;
   getRecentlyViewed: () => RecentlyViewedRecipe[];
@@ -116,9 +117,17 @@ export const useRecipeStore = create<RecipeStore>((set, get) => ({
   recentlyViewed: [],
   
   addRecipe: (recipe: AppRecipe) => {
-    set((state) => ({
-      savedRecipes: [...state.savedRecipes, recipe],
-    }));
+    set((state) => {
+      // Check if recipe already exists to prevent duplicates
+      const existingRecipe = state.savedRecipes.find(r => r.id === recipe.id);
+      if (existingRecipe) {
+        return state; // Return unchanged state if recipe already exists
+      }
+      
+      return {
+        savedRecipes: [...state.savedRecipes, recipe],
+      };
+    });
   },
   
   removeRecipe: (recipeId: string) => {
@@ -231,53 +240,59 @@ export const useRecipeStore = create<RecipeStore>((set, get) => ({
     }));
   },
   
-  getRecipesInFolder: (folderId: string) => {
-    const state = get();
-    const folder = state.folders.find(f => f.id === folderId);
-    
-    if (!folder) return [];
-    
-    // For smart folders, filter recipes based on criteria
-    if (folder.isSmartFolder && folder.filterCriteria) {
-      return state.savedRecipes.filter(recipe => {
-        const criteria = folder.filterCriteria!;
-        
-        // Check cuisine match
-        if (criteria.cuisine && recipe.cuisine.toLowerCase() !== criteria.cuisine.toLowerCase()) {
-          return false;
-        }
-        
-        // Check cook time (parse cook time string like "25 min" to number)
-        if (criteria.maxCookTime) {
-          const cookTimeMatch = recipe.cook_time?.match(/(\d+)/);
-          if (cookTimeMatch) {
-            const cookTime = parseInt(cookTimeMatch[1]);
-            if (cookTime > criteria.maxCookTime) {
-              return false;
-            }
+        getRecipesInFolder: (folderId: string) => {
+          const state = get();
+          const folder = state.folders.find(f => f.id === folderId);
+          
+          if (!folder) return [];
+          
+          // For smart folders, filter recipes based on criteria
+          if (folder.isSmartFolder && folder.filterCriteria) {
+            return state.savedRecipes.filter(recipe => {
+              const criteria = folder.filterCriteria!;
+              
+              // Check cuisine match
+              if (criteria.cuisine && recipe.cuisine.toLowerCase() !== criteria.cuisine.toLowerCase()) {
+                return false;
+              }
+              
+              // Check cook time (parse cook time string like "25 min" to number)
+              if (criteria.maxCookTime) {
+                const cookTimeMatch = recipe.cook_time?.match(/(\d+)/);
+                if (cookTimeMatch) {
+                  const cookTime = parseInt(cookTimeMatch[1]);
+                  if (cookTime > criteria.maxCookTime) {
+                    return false;
+                  }
+                }
+              }
+              
+              // Check if recipe contains required ingredients
+              if (criteria.ingredients && criteria.ingredients.length > 0) {
+                const recipeIngredients = recipe.ingredients?.join(' ').toLowerCase() || '';
+                const hasRequiredIngredient = criteria.ingredients.some(ingredient =>
+                  recipeIngredients.includes(ingredient.toLowerCase())
+                );
+                if (!hasRequiredIngredient) {
+                  return false;
+                }
+              }
+              
+              return true;
+            });
           }
-        }
-        
-        // Check if recipe contains required ingredients
-        if (criteria.ingredients && criteria.ingredients.length > 0) {
-          const recipeIngredients = recipe.ingredients?.join(' ').toLowerCase() || '';
-          const hasRequiredIngredient = criteria.ingredients.some(ingredient =>
-            recipeIngredients.includes(ingredient.toLowerCase())
+          
+          // For regular folders, return manually assigned recipes
+          return state.savedRecipes.filter(recipe => 
+            recipe.folderIds?.includes(folderId) || false
           );
-          if (!hasRequiredIngredient) {
-            return false;
-          }
-        }
+        },
         
-        return true;
-      });
-    }
-    
-    // For regular folders, return manually assigned recipes
-    return state.savedRecipes.filter(recipe => 
-      recipe.folderIds?.includes(folderId) || false
-    );
-  },
+        isRecipeInFolder: (recipeId: string, folderId: string) => {
+          const state = get();
+          const recipe = state.savedRecipes.find(r => r.id === recipeId);
+          return recipe?.folderIds?.includes(folderId) || false;
+        },
   
   // Recently viewed methods
   addToRecentlyViewed: (recipe: AppRecipe) => {

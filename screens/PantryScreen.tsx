@@ -1,7 +1,6 @@
 ﻿import React, { useState, useEffect, useRef } from "react";
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, ScrollView, Alert, SafeAreaView, Animated, Image } from "react-native";
 import { Ionicons } from '@expo/vector-icons';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useRecipeStore } from '../state/recipeStore.fixed';
 import HapticService from '../services/hapticService';
 
@@ -9,7 +8,6 @@ export default function PantryScreen() {
   const [ingredients, setIngredients] = useState("");
   const [showFilters, setShowFilters] = useState(false);
   const [activeFilters, setActiveFilters] = useState<string[]>([]);
-  const [showOverlay, setShowOverlay] = useState(false);
   
   // Use global store for pantry items and filters
   const { pantryItems, addPantryItem, removePantryItem, updateFilters, filters } = useRecipeStore();
@@ -17,7 +15,6 @@ export default function PantryScreen() {
   // Animation refs
   const bounceAnim = useRef(new Animated.Value(1)).current;
   const arrowAnim = useRef(new Animated.Value(0)).current;
-  const overlayOpacity = useRef(new Animated.Value(0)).current;
 
   // Filter categories
   const filterCategories = {
@@ -68,56 +65,6 @@ export default function PantryScreen() {
     }
   }, [activeFilters.length]);
 
-  // First-time user overlay logic
-  useEffect(() => {
-    const checkAndShowOverlay = async () => {
-      try {
-        const hasSeenOverlay = await AsyncStorage.getItem('hasSeenPantryOverlay');
-        if (!hasSeenOverlay) {
-          // Show overlay for first-time users
-          setShowOverlay(true);
-          
-          // Trigger haptic feedback when overlay appears
-          HapticService.buttonPress();
-          
-          // Fade in animation
-          Animated.timing(overlayOpacity, {
-            toValue: 1,
-            duration: 500,
-            useNativeDriver: true,
-          }).start();
-          
-          // Auto-dismiss after 5 seconds
-          setTimeout(() => {
-            dismissOverlay();
-          }, 5000);
-        }
-      } catch (error) {
-        console.error('Error checking overlay status:', error);
-      }
-    };
-
-    checkAndShowOverlay();
-  }, []);
-
-  // Function to dismiss overlay
-  const dismissOverlay = async () => {
-    try {
-      // Fade out animation
-      Animated.timing(overlayOpacity, {
-        toValue: 0,
-        duration: 300,
-        useNativeDriver: true,
-      }).start(() => {
-        setShowOverlay(false);
-      });
-      
-      // Mark as seen in AsyncStorage
-      await AsyncStorage.setItem('hasSeenPantryOverlay', 'true');
-    } catch (error) {
-      console.error('Error dismissing overlay:', error);
-    }
-  };
 
   // Helper function to get filter preview
   const getFilterPreview = () => {
@@ -394,25 +341,6 @@ export default function PantryScreen() {
         )}
       </ScrollView>
       
-      {/* First-time user overlay */}
-      {showOverlay && (
-        <Animated.View 
-          style={[
-            styles.overlay,
-            { opacity: overlayOpacity }
-          ]}
-        >
-          <TouchableOpacity
-            style={styles.overlayTouchable}
-            onPress={dismissOverlay}
-            activeOpacity={1}
-          >
-            <View style={styles.overlayContent}>
-              <Text style={styles.overlayText}>What's in your fridge?</Text>
-            </View>
-          </TouchableOpacity>
-        </Animated.View>
-      )}
     </SafeAreaView>
   );
 }
@@ -776,38 +704,5 @@ const styles = StyleSheet.create({
   },
   activeFilterTagText: {
     color: '#FFFFFF',
-  },
-  // Overlay styles
-  overlay: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    width: '100%',
-    height: '100%',
-    backgroundColor: 'rgba(0, 0, 0, 0.7)',
-    justifyContent: 'center',
-    alignItems: 'center',
-    zIndex: 1000,
-  },
-  overlayTouchable: {
-    flex: 1,
-    width: '100%',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  overlayContent: {
-    backgroundColor: 'transparent',
-    paddingHorizontal: 40,
-    paddingVertical: 20,
-  },
-  overlayText: {
-    fontSize: 24,
-    fontWeight: '600',
-    fontFamily: 'Recoleta-Bold',
-    color: '#FFFFFF',
-    textAlign: 'center',
-    lineHeight: 32,
   },
 });

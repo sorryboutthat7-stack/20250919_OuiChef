@@ -475,7 +475,13 @@ export default function SavedRecipesScreen() {
       });
 
       if (!hasIngredient) {
-        missingIngredients.push(ingredient);
+        // Clean ingredient name for display (remove preparation methods and "to taste")
+        const displayIngredient = ingredient
+          .replace(/,\s*(diced|chopped|sliced|minced|grated|shredded|crushed|halved|quartered|julienned|cubed|strips|rings|wedges|chunks|bits|pieces|optional).*$/i, '') // Remove preparation methods at end
+          .replace(/\s+(diced|chopped|sliced|minced|grated|shredded|crushed|halved|quartered|julienned|cubed|strips|rings|wedges|chunks|bits|pieces|optional).*$/i, '') // Remove preparation methods
+          .replace(/\s+to\s+taste$/i, '') // Remove "to taste" at the end
+          .trim();
+        missingIngredients.push(displayIngredient);
       }
     });
 
@@ -1054,11 +1060,29 @@ export default function SavedRecipesScreen() {
                 {/* Instructions */}
                 <View style={[styles.section, styles.sectionWithBackground]}>
                   <Text style={styles.sectionTitle}>Instructions</Text>
-                  {selectedRecipe.instructions?.map((instruction: string, index: number) => (
-                    <Text key={index} style={styles.instructionText}>
-                      {index + 1}. {instruction}
-                    </Text>
-                  ))}
+                  {selectedRecipe.instructions?.map((instruction: string, index: number) => {
+                    // Check if instruction already has step formatting to avoid duplication
+                    const cleanInstruction = instruction.trim();
+                    
+                    // Check for patterns like "1. Step 1:" or "Step 1:" and clean them up
+                    const stepPattern = /^(\d+\.\s*)?Step\s*\d+[.:]?\s*/i;
+                    const hasStepPattern = stepPattern.test(cleanInstruction);
+                    
+                    let displayText;
+                    if (hasStepPattern) {
+                      // Remove the number prefix if it exists (like "1. ") and keep just "Step X:"
+                      displayText = cleanInstruction.replace(/^\d+\.\s*/, '');
+                    } else {
+                      // Add step formatting if it doesn't exist
+                      displayText = `Step ${index + 1}. ${cleanInstruction}`;
+                    }
+                    
+                    return (
+                      <Text key={index} style={styles.instructionText}>
+                        {displayText}
+                      </Text>
+                    );
+                  })}
                 </View>
               </View>
             </ScrollView>
