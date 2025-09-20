@@ -117,13 +117,16 @@ export const useRecipeStore = create<RecipeStore>((set, get) => ({
   recentlyViewed: [],
   
   addRecipe: (recipe: AppRecipe) => {
+    console.log('🔍 addRecipe called:', { recipeId: recipe.id, title: recipe.title });
     set((state) => {
       // Check if recipe already exists to prevent duplicates
       const existingRecipe = state.savedRecipes.find(r => r.id === recipe.id);
       if (existingRecipe) {
+        console.log('🔍 Recipe already exists, not adding:', recipe.id);
         return state; // Return unchanged state if recipe already exists
       }
       
+      console.log('🔍 Adding new recipe to saved recipes:', recipe.id);
       return {
         savedRecipes: [...state.savedRecipes, recipe],
       };
@@ -218,26 +221,38 @@ export const useRecipeStore = create<RecipeStore>((set, get) => ({
   },
   
   assignRecipeToFolder: (recipeId: string, folderId: string, assign: boolean) => {
-    set((state) => ({
-      savedRecipes: state.savedRecipes.map(recipe => {
-        if (recipe.id !== recipeId) return recipe;
-        
-        const currentFolderIds = recipe.folderIds || [];
-        let newFolderIds;
-        
-        if (assign) {
-          // Add folder if not already assigned
-          newFolderIds = currentFolderIds.includes(folderId) 
-            ? currentFolderIds 
-            : [...currentFolderIds, folderId];
-        } else {
-          // Remove folder
-          newFolderIds = currentFolderIds.filter(id => id !== folderId);
-        }
-        
-        return { ...recipe, folderIds: newFolderIds };
-      }),
-    }));
+    console.log('🔍 assignRecipeToFolder called:', { recipeId, folderId, assign });
+    set((state) => {
+      const recipe = state.savedRecipes.find(r => r.id === recipeId);
+      if (!recipe) {
+        console.log('🔍 Recipe not found for assignment:', recipeId);
+        return state;
+      }
+      
+      console.log('🔍 Found recipe for assignment:', { recipeId, currentFolderIds: recipe.folderIds });
+      
+      return {
+        savedRecipes: state.savedRecipes.map(recipe => {
+          if (recipe.id !== recipeId) return recipe;
+          
+          const currentFolderIds = recipe.folderIds || [];
+          let newFolderIds;
+          
+          if (assign) {
+            // Add folder if not already assigned
+            newFolderIds = currentFolderIds.includes(folderId) 
+              ? currentFolderIds 
+              : [...currentFolderIds, folderId];
+          } else {
+            // Remove folder
+            newFolderIds = currentFolderIds.filter(id => id !== folderId);
+          }
+          
+          console.log('🔍 Updated folderIds:', { recipeId, oldFolderIds: currentFolderIds, newFolderIds });
+          return { ...recipe, folderIds: newFolderIds };
+        }),
+      };
+    });
   },
   
         getRecipesInFolder: (folderId: string) => {

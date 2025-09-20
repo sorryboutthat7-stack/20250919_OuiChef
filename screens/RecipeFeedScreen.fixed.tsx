@@ -803,9 +803,13 @@ export default function RecipeFeedScreen() {
   const handleSaveToSpecificFolder = (folderId: string | null) => {
     if (!selectedRecipe) return;
     
+    console.log('🔍 handleSaveToSpecificFolder called:', { recipeId: selectedRecipe.id, folderId });
+    
     // Check if recipe is already saved and in the specific folder
     const isAlreadySaved = useRecipeStore.getState().isRecipeSaved(selectedRecipe.id);
     const isAlreadyInFolder = folderId ? useRecipeStore.getState().isRecipeInFolder(selectedRecipe.id, folderId) : false;
+    
+    console.log('🔍 Recipe save status:', { isAlreadySaved, isAlreadyInFolder });
     
     // Trigger save animation immediately over the recipe details
     triggerSaveAnimation();
@@ -814,10 +818,12 @@ export default function RecipeFeedScreen() {
     
     // Add recipe to saved recipes (will be ignored if already exists)
     addRecipe(selectedRecipe);
+    console.log('🔍 Recipe added to saved recipes');
     
     // Assign to specific folder if provided
     if (folderId) {
       assignRecipeToFolder(selectedRecipe.id, folderId, true);
+      console.log('🔍 Recipe assigned to folder:', folderId);
     }
     
     // Close save sheet only (keep recipe details modal open)
