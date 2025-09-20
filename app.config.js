@@ -21,7 +21,10 @@ export default {
     },
     ios: {
       bundleIdentifier: "com.chevuoi.ouichef",
-      supportsTablet: true
+      supportsTablet: true,
+      infoPlist: {
+        ITSAppUsesNonExemptEncryption: false
+      }
     },
     android: {
       package: "com.chevuoi.ouichef",
