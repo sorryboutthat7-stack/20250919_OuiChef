@@ -1,13 +1,15 @@
 import Constants from 'expo-constants';
 
-const UNSPLASH_ACCESS_KEY = Constants.expoConfig?.extra?.EXPO_PUBLIC_UNSPLASH_ACCESS_KEY || process.env.EXPO_PUBLIC_UNSPLASH_ACCESS_KEY;
+const UNSPLASH_ACCESS_KEY = 
+  Constants.expoConfig?.extra?.EXPO_PUBLIC_UNSPLASH_ACCESS_KEY ||
+  Constants.manifest?.extra?.EXPO_PUBLIC_UNSPLASH_ACCESS_KEY;
 const UNSPLASH_API_URL = 'https://api.unsplash.com/search/photos';
 
 // Debug: Log environment variable status
 console.log('Image Service - Environment check:');
 console.log('Constants.expoConfig?.extra?.EXPO_PUBLIC_UNSPLASH_ACCESS_KEY exists:', !!Constants.expoConfig?.extra?.EXPO_PUBLIC_UNSPLASH_ACCESS_KEY);
-console.log('process.env.EXPO_PUBLIC_UNSPLASH_ACCESS_KEY exists:', !!process.env.EXPO_PUBLIC_UNSPLASH_ACCESS_KEY);
-console.log('Final Unsplash Key first 8 chars:', UNSPLASH_ACCESS_KEY ? UNSPLASH_ACCESS_KEY.substring(0, 8) : 'NOT FOUND');
+console.log('Constants.manifest?.extra?.EXPO_PUBLIC_UNSPLASH_ACCESS_KEY exists:', !!Constants.manifest?.extra?.EXPO_PUBLIC_UNSPLASH_ACCESS_KEY);
+console.log('UNSPLASH_KEY in TestFlight:', UNSPLASH_ACCESS_KEY ? UNSPLASH_ACCESS_KEY.substring(0, 8) : 'NOT FOUND');
 
 export interface UnsplashImage {
   id: string;
