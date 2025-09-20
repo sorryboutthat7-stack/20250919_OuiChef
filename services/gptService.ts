@@ -1,12 +1,11 @@
 import { GPTRecipe, GPTRecipeResponse, PantryItem } from '../types';
 import Constants from 'expo-constants';
-import { API_KEYS } from '../api-keys';
 
 const OPENAI_API_KEY = 
   Constants.expoConfig?.extra?.EXPO_PUBLIC_OPENAI_API_KEY ||
   Constants.manifest?.extra?.EXPO_PUBLIC_OPENAI_API_KEY ||
   process.env.EXPO_PUBLIC_OPENAI_API_KEY ||
-  API_KEYS.OPENAI_API_KEY;
+  'your-api-key-here';
 const OPENAI_API_URL = 'https://api.openai.com/v1/chat/completions';
 
 // Debug: Log environment variable status
