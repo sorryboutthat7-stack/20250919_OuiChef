@@ -38,8 +38,8 @@ export default {
       favicon: "./assets/favicon.png"
     },
     extra: {
-      EXPO_PUBLIC_OPENAI_API_KEY: process.env.EXPO_PUBLIC_OPENAI_API_KEY,
-      EXPO_PUBLIC_UNSPLASH_ACCESS_KEY: process.env.EXPO_PUBLIC_UNSPLASH_ACCESS_KEY,
+      EXPO_PUBLIC_OPENAI_API_KEY: process.env.EXPO_PUBLIC_OPENAI_API_KEY || "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",
+      EXPO_PUBLIC_UNSPLASH_ACCESS_KEY: process.env.EXPO_PUBLIC_UNSPLASH_ACCESS_KEY || "Uc-Mym9cNJcfY0S427GoRHsQh1svsn0nnFE0zSHWf3E",
       eas: {
         projectId: "2b3529d5-db6c-4fe0-8cf6-4843cca13d21"
       }
