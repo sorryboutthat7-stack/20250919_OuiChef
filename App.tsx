@@ -61,6 +61,37 @@ function MainTabs() {
       }}
     >
       <Tab.Screen 
+        name="Pantry" 
+        component={PantryScreen}
+        options={{
+          title: '',
+                 headerTitle: () => (
+                   <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', flex: 1, position: 'relative', height: 44 }}>
+                     <View style={{ position: 'absolute', left: '50%', transform: [{ translateX: -50 }], top: '50%', marginTop: -15 }}>
+                       <Text style={{ 
+                         fontSize: 24, 
+                         lineHeight: 30, 
+                         fontWeight: 'bold', 
+                         fontFamily: 'Recoleta-Bold', 
+                         color: '#FF6B6B'
+                       }}>
+                         Oui, Chef
+                       </Text>
+                     </View>
+                     <Image 
+                       source={require('./logo/ouichef_logo_trans-01.png')} 
+                       style={{ width: 65, height: 32, position: 'absolute', left: '50%', transform: [{ translateX: -105 }], top: '50%', marginTop: -16 }}
+                       resizeMode="contain"
+                     />
+                   </View>
+                 ),
+          tabBarLabel: 'My Pantry',
+          tabBarIcon: ({ color, size }) => (
+            <TabIcon name="basket" color={color} size={size} />
+          ),
+        }}
+      />
+      <Tab.Screen 
         name="Recipes" 
         component={RecipeFeedScreen}
         options={{
