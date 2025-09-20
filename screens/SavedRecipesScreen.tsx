@@ -183,7 +183,7 @@ export default function SavedRecipesScreen() {
   };
   
   // Get saved recipes and folders from global store
-  const { savedRecipes, removeRecipe, folders, getRecipesInFolder, addFolder, pantryItems, addToRecentlyViewed, addRecipe, assignRecipeToFolder } = useRecipeStore();
+  const { savedRecipes, removeRecipe, folders, getRecipesInFolder, addFolder, removeFolder, pantryItems, addToRecentlyViewed, addRecipe, assignRecipeToFolder } = useRecipeStore();
 
   // Filter recipes based on search query
   const filteredSavedRecipes = savedRecipes.filter(recipe => {
@@ -688,12 +688,41 @@ export default function SavedRecipesScreen() {
     const recipeCount = recipesInFolder.length;
     const firstRecipe = recipesInFolder[0];
     
+    const handleDeleteFolder = () => {
+      HapticService.buttonPress();
+      Alert.alert(
+        'Delete Folder',
+        'Are you sure you want to delete this entire folder?',
+        [
+          {
+            text: 'Cancel',
+            style: 'cancel',
+          },
+          {
+            text: 'Delete',
+            style: 'destructive',
+            onPress: () => {
+              HapticService.buttonPress();
+              removeFolder(item.id);
+            },
+          },
+        ]
+      );
+    };
+    
     return (
       <TouchableOpacity 
         style={styles.folderCard} 
         activeOpacity={0.8}
         onPress={() => handleFolderPress(item)}
       >
+        <TouchableOpacity 
+          style={styles.folderDeleteButton}
+          onPress={handleDeleteFolder}
+          activeOpacity={0.7}
+        >
+          <Ionicons name="close" size={16} color="#666" />
+        </TouchableOpacity>
         <View style={styles.folderThumbnail}>
           {firstRecipe && (firstRecipe.imageUrl || firstRecipe.image) ? (
             <Image source={{ uri: firstRecipe.imageUrl || firstRecipe.image }} style={styles.folderThumbnailImage} />
@@ -1547,6 +1576,24 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 4,
     elevation: 3,
+    position: 'relative',
+  },
+  folderDeleteButton: {
+    position: 'absolute',
+    top: 8,
+    right: 8,
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    backgroundColor: 'rgba(255, 255, 255, 0.9)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 10,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.2,
+    shadowRadius: 2,
+    elevation: 2,
   },
   folderThumbnail: {
     width: '100%',
