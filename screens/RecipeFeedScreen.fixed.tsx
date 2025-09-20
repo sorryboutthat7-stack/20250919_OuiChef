@@ -574,7 +574,7 @@ export default function RecipeFeedScreen() {
           
           return {
             ...recipe,
-            id: recipe.id || `gpt-${Date.now()}-${index}-${Math.random().toString(36).substr(2, 9)}`,
+            id: `gpt-${Date.now()}-${index}-${Math.random().toString(36).substr(2, 9)}-${recipe.title?.replace(/\s+/g, '-').toLowerCase().substring(0, 20)}`,
             imageUrl,
             cookTime: recipe.cook_time || '30 min',
             instructions: recipe.steps || [],
@@ -830,9 +830,16 @@ export default function RecipeFeedScreen() {
     setServingMultiplier(multiplier);
   };
 
-  // Function to clean ingredient name for display (remove preparation methods)
+  // Function to clean ingredient name for display (remove quantities and preparation methods)
   const cleanIngredientForDisplay = (ingredient: string): string => {
     return ingredient
+      // Remove quantities and measurements
+      .replace(/^\d+\/\d+\s+/, '') // Remove fractions like "1/2 "
+      .replace(/^\d+\.\d+\s+/, '') // Remove decimals like "1.5 "
+      .replace(/^\d+\s+/, '') // Remove whole numbers like "2 "
+      .replace(/^(cup|cups|tbsp|tsp|oz|lb|pound|pounds|clove|cloves|slice|slices|can|cans|bag|bags|bunch|bunches|head|heads|piece|pieces|dash|pinch|handful)\s+/, '') // Remove measurements
+      .replace(/\s+(cup|cups|tbsp|tsp|oz|lb|pound|pounds|clove|cloves|slice|slices|can|cans|bag|bags|bunch|bunches|head|heads|piece|pieces|dash|pinch|handful)$/, '') // Remove measurements at end
+      // Remove preparation methods
       .replace(/,\s*(diced|chopped|sliced|minced|grated|shredded|crushed|halved|quartered|julienned|cubed|strips|rings|wedges|chunks|bits|pieces|optional).*$/i, '') // Remove preparation methods at end
       .replace(/\s+(diced|chopped|sliced|minced|grated|shredded|crushed|halved|quartered|julienned|cubed|strips|rings|wedges|chunks|bits|pieces|optional).*$/i, '') // Remove preparation methods
       .replace(/\s+to\s+taste$/i, '') // Remove "to taste" at the end

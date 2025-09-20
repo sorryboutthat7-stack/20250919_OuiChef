@@ -159,11 +159,12 @@ IMPORTANT: Return ONLY valid JSON, no markdown formatting, no backticks, no extr
     } else {
       prompt = `Generate 3 dinner recipes under 30 minutes using these pantry ingredients: ${pantryNames}. 
       
-IMPORTANT INGREDIENT RULES:
-- Use as many pantry ingredients as possible (aim for 80%+ pantry ingredients)
-- Maximum 2 missing ingredients per recipe (prefer 0-1 missing ingredients)
-- If you can't create a good recipe with pantry ingredients, suggest the best possible recipe with minimal missing ingredients
-- Missing ingredients should be common, basic items (salt, pepper, oil, etc.)`;
+CRITICAL INGREDIENT RULES:
+- PRIORITY: Generate recipes with 0-2 missing ingredients (prefer 0-1 missing ingredients)
+- Use 80%+ pantry ingredients whenever possible
+- Only suggest 3+ missing ingredients if absolutely necessary due to very limited pantry
+- Missing ingredients should be common, basic items (salt, pepper, oil, etc.)
+- If pantry is limited, prioritize recipes that use the most pantry ingredients available`;
     }
     
     if (options.mealType && options.mealType !== 'dinner') {
