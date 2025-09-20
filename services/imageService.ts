@@ -1,9 +1,11 @@
 import Constants from 'expo-constants';
+import { API_KEYS } from '../api-keys';
 
 const UNSPLASH_ACCESS_KEY = 
   Constants.expoConfig?.extra?.EXPO_PUBLIC_UNSPLASH_ACCESS_KEY ||
   Constants.manifest?.extra?.EXPO_PUBLIC_UNSPLASH_ACCESS_KEY ||
-  process.env.EXPO_PUBLIC_UNSPLASH_ACCESS_KEY;
+  process.env.EXPO_PUBLIC_UNSPLASH_ACCESS_KEY ||
+  API_KEYS.UNSPLASH_ACCESS_KEY;
 const UNSPLASH_API_URL = 'https://api.unsplash.com/search/photos';
 
 // Debug: Log environment variable status

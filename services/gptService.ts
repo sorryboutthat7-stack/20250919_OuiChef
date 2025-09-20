@@ -1,21 +1,23 @@
 import { GPTRecipe, GPTRecipeResponse, PantryItem } from '../types';
 import Constants from 'expo-constants';
+import { API_KEYS } from '../api-keys';
 
 const OPENAI_API_KEY = 
   Constants.expoConfig?.extra?.EXPO_PUBLIC_OPENAI_API_KEY ||
   Constants.manifest?.extra?.EXPO_PUBLIC_OPENAI_API_KEY ||
   process.env.EXPO_PUBLIC_OPENAI_API_KEY ||
-  'your-api-key-here';
+  API_KEYS.OPENAI_API_KEY;
 const OPENAI_API_URL = 'https://api.openai.com/v1/chat/completions';
 
 // Debug: Log environment variable status
-console.log('GPT Service - Environment check:');
+console.log('🔍 GPT Service - Environment check:');
 console.log('Constants.expoConfig?.extra?.EXPO_PUBLIC_OPENAI_API_KEY exists:', !!Constants.expoConfig?.extra?.EXPO_PUBLIC_OPENAI_API_KEY);
 console.log('Constants.manifest?.extra?.EXPO_PUBLIC_OPENAI_API_KEY exists:', !!Constants.manifest?.extra?.EXPO_PUBLIC_OPENAI_API_KEY);
 console.log('process.env.EXPO_PUBLIC_OPENAI_API_KEY exists:', !!process.env.EXPO_PUBLIC_OPENAI_API_KEY);
-console.log('OPENAI_KEY in TestFlight:', OPENAI_API_KEY ? OPENAI_API_KEY.substring(0, 8) : 'NOT FOUND');
-console.log('Constants.expoConfig extra:', Constants.expoConfig?.extra);
-console.log('Constants.manifest extra:', Constants.manifest?.extra);
+console.log('🔑 OPENAI_KEY in TestFlight:', OPENAI_API_KEY ? OPENAI_API_KEY.substring(0, 8) + '...' : 'NOT FOUND');
+console.log('📱 Constants.expoConfig extra:', Constants.expoConfig?.extra);
+console.log('📱 Constants.manifest extra:', Constants.manifest?.extra);
+console.log('🚀 GPT Service initialized with API key:', OPENAI_API_KEY ? 'YES' : 'NO');
 
 export interface RecipeGenerationOptions {
   mealType?: 'breakfast' | 'lunch' | 'dinner' | 'snack';
@@ -45,6 +47,10 @@ export class GPTService {
       
       // Add delay to prevent rate limiting
       await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      console.log('🚀 Calling OpenAI API with prompt length:', prompt.length);
+      console.log('🔑 Using API key:', OPENAI_API_KEY ? OPENAI_API_KEY.substring(0, 8) + '...' : 'NOT FOUND');
+      console.log('🌐 API URL:', OPENAI_API_URL);
       
       const response = await fetch(OPENAI_API_URL, {
         method: 'POST',
