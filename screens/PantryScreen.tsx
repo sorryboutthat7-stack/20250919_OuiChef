@@ -1,11 +1,11 @@
 ﻿import React, { useState, useEffect, useRef } from "react";
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, ScrollView, Alert, SafeAreaView, Animated, Image } from "react-native";
+import { View, Text, TouchableOpacity, StyleSheet, ScrollView, Alert, SafeAreaView, Animated, Image } from "react-native";
 import { Ionicons } from '@expo/vector-icons';
 import { useRecipeStore } from '../state/recipeStore.fixed';
 import HapticService from '../services/hapticService';
+import GPTStylePantryInput from '../components/GPTStylePantryInput';
 
 export default function PantryScreen() {
-  const [ingredients, setIngredients] = useState("");
   const [showFilters, setShowFilters] = useState(false);
   const [activeFilters, setActiveFilters] = useState<string[]>([]);
   
@@ -82,34 +82,6 @@ export default function PantryScreen() {
     };
   };
 
-  const addIngredients = () => {
-    if (!ingredients.trim()) {
-      HapticService.errorState();
-      Alert.alert("Error", "Please enter some ingredients");
-      return;
-    }
-
-    const newItems = ingredients
-      .split(",")
-      .map(item => item.trim())
-      .filter(item => item.length > 0);
-
-    // Add each item to the global store with haptic feedback for each
-    newItems.forEach((item, index) => {
-      addPantryItem({
-        id: `pantry-${Date.now()}-${index}`,
-        name: item,
-        category: 'general',
-        addedAt: new Date().toISOString()
-      });
-      // Light haptic for each ingredient chip creation
-      HapticService.ingredientAdded();
-    });
-    
-    setIngredients("");
-    HapticService.successState();
-    Alert.alert("Success", "Ingredients added to your pantry!");
-  };
 
   const removeIngredient = (index: number) => {
     const itemToRemove = pantryItems[index];
@@ -264,26 +236,14 @@ export default function PantryScreen() {
         )}
 
         <View style={styles.inputSection}>
-          <Text style={styles.inputLabel}>Add ingredients (comma-separated):</Text>
-          <TextInput
-            style={[
-              styles.input,
-              { color: ingredients.trim() ? '#333333' : '#999999' }
-            ]}
-            value={ingredients}
-            onChangeText={setIngredients}
-            placeholder="e.g., chicken, rice, tomatoes, cheese"
-            placeholderTextColor="#999"
-            multiline
-            numberOfLines={3}
+          <GPTStylePantryInput
+            onIngredientsAdded={(ingredients) => {
+              console.log('✅ Ingredients added via GPT input:', ingredients);
+              // Trigger haptic feedback for successful addition
+              HapticService.buttonPress();
+            }}
+            placeholder="Add ingredients to your pantry..."
           />
-          <TouchableOpacity 
-            style={styles.addButton} 
-            onPress={addIngredients}
-            activeOpacity={0.8}
-          >
-            <Text style={styles.addButtonText}>Add Ingredients</Text>
-          </TouchableOpacity>
         </View>
 
         {pantryItems.length > 0 ? (
@@ -530,10 +490,9 @@ const styles = StyleSheet.create({
   ingredientText: {
     fontSize: 14,
     lineHeight: 20,
-    fontWeight: '600',
+    fontWeight: '500',
     fontFamily: 'NunitoSans',
     color: '#FFFFFF',
-    fontWeight: "500",
   },
   removeIcon: {
     marginLeft: 8,
@@ -584,10 +543,9 @@ const styles = StyleSheet.create({
   filterBannerMainTextActive: {
     fontSize: 15,
     lineHeight: 22,
-    fontWeight: '700',
+    fontWeight: '600',
     fontFamily: 'NunitoSans',
     color: '#0D47A1',
-    fontWeight: '600',
   },
   filterBannerSubText: {
     fontSize: 12,
