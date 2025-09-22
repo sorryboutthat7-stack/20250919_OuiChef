@@ -242,7 +242,7 @@ export default function PantryScreen() {
               // Trigger haptic feedback for successful addition
               HapticService.buttonPress();
             }}
-            placeholder="Add ingredients to your pantry..."
+            placeholder="Add ingredients..."
           />
         </View>
 

@@ -22,7 +22,7 @@ interface GPTStylePantryInputProps {
 
 const GPTStylePantryInput: React.FC<GPTStylePantryInputProps> = ({
   onIngredientsAdded,
-  placeholder = "Add ingredients to your pantry...",
+  placeholder = "Add ingredients...",
 }) => {
   const [inputText, setInputText] = useState('');
   const [isListening, setIsListening] = useState(false);
@@ -220,8 +220,8 @@ const GPTStylePantryInput: React.FC<GPTStylePantryInputProps> = ({
       };
     } else {
       return {
-        name: 'mic' as const,
-        color: '#999',
+        name: 'pulse' as const,
+        color: '#FF6B6B',
         animated: false,
       };
     }
@@ -273,7 +273,7 @@ const GPTStylePantryInput: React.FC<GPTStylePantryInputProps> = ({
                 },
               ]}
             >
-              <Ionicons name="mic" size={20} color={iconConfig.color} />
+              <Ionicons name="pulse" size={20} color={iconConfig.color} />
             </Animated.View>
           ) : (
             <Ionicons name={iconConfig.name} size={20} color={iconConfig.color} />
