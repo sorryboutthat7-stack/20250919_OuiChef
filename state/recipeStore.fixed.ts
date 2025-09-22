@@ -1,4 +1,21 @@
 import { create } from 'zustand';
+import StorageService from '../services/storageService';
+
+// Helper function to automatically save data when state changes
+const autoSave = (state: any) => {
+  // Only save if data has been loaded from storage
+  if (state.isDataLoaded) {
+    StorageService.saveAllData({
+      pantryItems: state.pantryItems,
+      savedRecipes: state.savedRecipes,
+      folders: state.folders,
+      recentlyViewed: state.recentlyViewed,
+      filters: state.filters,
+    }).catch(error => {
+      console.error('❌ Auto-save failed:', error);
+    });
+  }
+};
 
 // Simplified types to avoid import issues
 interface PantryItem {
@@ -87,6 +104,10 @@ interface RecipeStore {
   // Recently viewed methods
   addToRecentlyViewed: (recipe: AppRecipe) => void;
   getRecentlyViewed: () => RecentlyViewedRecipe[];
+  // Persistence methods
+  loadFromStorage: () => Promise<void>;
+  saveToStorage: () => Promise<void>;
+  isDataLoaded: boolean;
 }
 
 export const useRecipeStore = create<RecipeStore>((set, get) => ({
@@ -115,6 +136,7 @@ export const useRecipeStore = create<RecipeStore>((set, get) => ({
     { id: '4', name: 'Desserts', color: '#9C27B0', createdAt: new Date().toISOString() },
   ],
   recentlyViewed: [],
+  isDataLoaded: false,
   
   addRecipe: (recipe: AppRecipe) => {
     console.log('🔍 addRecipe called:', { recipeId: recipe.id, title: recipe.title });
@@ -127,16 +149,24 @@ export const useRecipeStore = create<RecipeStore>((set, get) => ({
       }
       
       console.log('🔍 Adding new recipe to saved recipes:', recipe.id);
-      return {
+      const newState = {
+        ...state,
         savedRecipes: [...state.savedRecipes, recipe],
       };
+      autoSave(newState);
+      return newState;
     });
   },
   
   removeRecipe: (recipeId: string) => {
-    set((state) => ({
-      savedRecipes: state.savedRecipes.filter(recipe => recipe.id !== recipeId),
-    }));
+    set((state) => {
+      const newState = {
+        ...state,
+        savedRecipes: state.savedRecipes.filter(recipe => recipe.id !== recipeId),
+      };
+      autoSave(newState);
+      return newState;
+    });
   },
   
   isRecipeSaved: (recipeId: string) => {
@@ -169,23 +199,38 @@ export const useRecipeStore = create<RecipeStore>((set, get) => ({
   },
   
   addPantryItem: (item: PantryItem) => {
-    set((state) => ({
-      pantryItems: [...state.pantryItems, item],
-    }));
+    set((state) => {
+      const newState = {
+        ...state,
+        pantryItems: [...state.pantryItems, item],
+      };
+      autoSave(newState);
+      return newState;
+    });
   },
   
   removePantryItem: (itemId: string) => {
-    set((state) => ({
-      pantryItems: state.pantryItems.filter(item => item.id !== itemId),
-    }));
+    set((state) => {
+      const newState = {
+        ...state,
+        pantryItems: state.pantryItems.filter(item => item.id !== itemId),
+      };
+      autoSave(newState);
+      return newState;
+    });
   },
   
   updatePantryItem: (itemId: string, updates: Partial<PantryItem>) => {
-    set((state) => ({
-      pantryItems: state.pantryItems.map(item =>
-        item.id === itemId ? { ...item, ...updates } : item
-      ),
-    }));
+    set((state) => {
+      const newState = {
+        ...state,
+        pantryItems: state.pantryItems.map(item =>
+          item.id === itemId ? { ...item, ...updates } : item
+        ),
+      };
+      autoSave(newState);
+      return newState;
+    });
   },
   
   updateFilters: (newFilters: Partial<RecipeFilters>) => {
@@ -196,28 +241,43 @@ export const useRecipeStore = create<RecipeStore>((set, get) => ({
   
   // Folder methods
   addFolder: (folder: RecipeFolder) => {
-    set((state) => ({
-      folders: [...state.folders, folder],
-    }));
+    set((state) => {
+      const newState = {
+        ...state,
+        folders: [...state.folders, folder],
+      };
+      autoSave(newState);
+      return newState;
+    });
   },
   
   removeFolder: (folderId: string) => {
-    set((state) => ({
-      folders: state.folders.filter(folder => folder.id !== folderId),
-      // Remove folder assignment from recipes
-      savedRecipes: state.savedRecipes.map(recipe => ({
-        ...recipe,
-        folderIds: recipe.folderIds?.filter(id => id !== folderId) || []
-      })),
-    }));
+    set((state) => {
+      const newState = {
+        ...state,
+        folders: state.folders.filter(folder => folder.id !== folderId),
+        // Remove folder assignment from recipes
+        savedRecipes: state.savedRecipes.map(recipe => ({
+          ...recipe,
+          folderIds: recipe.folderIds?.filter(id => id !== folderId) || []
+        })),
+      };
+      autoSave(newState);
+      return newState;
+    });
   },
   
   updateFolder: (folderId: string, updates: Partial<RecipeFolder>) => {
-    set((state) => ({
-      folders: state.folders.map(folder =>
-        folder.id === folderId ? { ...folder, ...updates } : folder
-      ),
-    }));
+    set((state) => {
+      const newState = {
+        ...state,
+        folders: state.folders.map(folder =>
+          folder.id === folderId ? { ...folder, ...updates } : folder
+        ),
+      };
+      autoSave(newState);
+      return newState;
+    });
   },
   
   assignRecipeToFolder: (recipeId: string, folderId: string, assign: boolean) => {
@@ -231,7 +291,8 @@ export const useRecipeStore = create<RecipeStore>((set, get) => ({
       
       console.log('🔍 Found recipe for assignment:', { recipeId, currentFolderIds: recipe.folderIds });
       
-      return {
+      const newState = {
+        ...state,
         savedRecipes: state.savedRecipes.map(recipe => {
           if (recipe.id !== recipeId) return recipe;
           
@@ -252,6 +313,8 @@ export const useRecipeStore = create<RecipeStore>((set, get) => ({
           return { ...recipe, folderIds: newFolderIds };
         }),
       };
+      autoSave(newState);
+      return newState;
     });
   },
   
@@ -330,14 +393,59 @@ export const useRecipeStore = create<RecipeStore>((set, get) => ({
       const newRecentlyViewed = [recentlyViewedRecipe, ...filteredRecentlyViewed];
       
       // Keep only the 10 most recent
-      return {
+      const newState = {
+        ...state,
         recentlyViewed: newRecentlyViewed.slice(0, 10)
       };
+      autoSave(newState);
+      return newState;
     });
   },
   
   getRecentlyViewed: () => {
     const state = get();
     return state.recentlyViewed;
+  },
+
+  // Persistence methods
+  loadFromStorage: async () => {
+    console.log('🔄 Loading data from storage...');
+    try {
+      const data = await StorageService.loadAllData();
+      
+      set((state) => ({
+        ...state,
+        pantryItems: data.pantryItems.length > 0 ? data.pantryItems : state.pantryItems,
+        savedRecipes: data.savedRecipes,
+        folders: data.folders.length > 0 ? data.folders : state.folders,
+        recentlyViewed: data.recentlyViewed,
+        filters: Object.keys(data.filters).length > 0 ? data.filters : state.filters,
+        isDataLoaded: true,
+      }));
+      
+      console.log('✅ Data loaded from storage successfully');
+    } catch (error) {
+      console.error('❌ Error loading data from storage:', error);
+      set((state) => ({ ...state, isDataLoaded: true }));
+    }
+  },
+
+  saveToStorage: async () => {
+    const state = get();
+    console.log('💾 Saving data to storage...');
+    
+    try {
+      await StorageService.saveAllData({
+        pantryItems: state.pantryItems,
+        savedRecipes: state.savedRecipes,
+        folders: state.folders,
+        recentlyViewed: state.recentlyViewed,
+        filters: state.filters,
+      });
+      
+      console.log('✅ Data saved to storage successfully');
+    } catch (error) {
+      console.error('❌ Error saving data to storage:', error);
+    }
   },
 }));

@@ -7,6 +7,8 @@ import { StatusBar } from 'expo-status-bar';
 import * as Font from 'expo-font';
 import { Ionicons } from '@expo/vector-icons';
 import HapticService from './services/hapticService';
+import { useRecipeStore } from './state/recipeStore.fixed';
+import LoadingScreen from './components/LoadingScreen';
 
 // Import actual screens
 import PantryScreen from './screens/PantryScreen';
@@ -122,10 +124,30 @@ function MainTabs() {
 
 export default function App() {
   const [fontsLoaded, setFontsLoaded] = useState(false);
+  const [dataLoaded, setDataLoaded] = useState(false);
+  const { loadFromStorage, isDataLoaded } = useRecipeStore();
 
   useEffect(() => {
     loadFonts();
   }, []);
+
+  useEffect(() => {
+    if (fontsLoaded && !dataLoaded) {
+      loadAppData();
+    }
+  }, [fontsLoaded, dataLoaded]);
+
+  const loadAppData = async () => {
+    try {
+      console.log('🔄 App: Loading data from storage...');
+      await loadFromStorage();
+      setDataLoaded(true);
+      console.log('✅ App: Data loaded successfully');
+    } catch (error) {
+      console.error('❌ App: Error loading data:', error);
+      setDataLoaded(true); // Continue even if data loading fails
+    }
+  };
 
   const loadFonts = async () => {
     try {
@@ -148,12 +170,8 @@ export default function App() {
     }
   };
 
-  if (!fontsLoaded) {
-    return (
-      <View style={styles.loadingContainer}>
-        <Text style={styles.loadingText}>Loading...</Text>
-      </View>
-    );
+  if (!fontsLoaded || !dataLoaded) {
+    return <LoadingScreen message="Loading your recipes..." />;
   }
 
         return (
