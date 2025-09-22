@@ -239,7 +239,6 @@ const GPTStylePantryInput: React.FC<GPTStylePantryInputProps> = ({
           onChangeText={handleTextChange}
           placeholder={placeholder}
           placeholderTextColor="#999"
-          multiline
           maxLength={200}
           onFocus={() => {
             if (transcription) {
@@ -324,7 +323,6 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontFamily: 'NunitoSans-Regular',
     color: '#333',
-    maxHeight: 100,
     paddingRight: 8,
   },
   iconButton: {
