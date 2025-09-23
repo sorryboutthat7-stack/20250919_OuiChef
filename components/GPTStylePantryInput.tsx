@@ -220,8 +220,8 @@ const GPTStylePantryInput: React.FC<GPTStylePantryInputProps> = ({
       };
     } else {
       return {
-        name: 'mic' as const,
-        color: '#fff',
+        name: 'pulse' as const,
+        color: '#FF6B6B',
         animated: false,
       };
     }
@@ -239,7 +239,6 @@ const GPTStylePantryInput: React.FC<GPTStylePantryInputProps> = ({
           onChangeText={handleTextChange}
           placeholder={placeholder}
           placeholderTextColor="#999"
-          multiline
           maxLength={200}
           onFocus={() => {
             if (transcription) {
@@ -274,7 +273,7 @@ const GPTStylePantryInput: React.FC<GPTStylePantryInputProps> = ({
                 },
               ]}
             >
-              <Ionicons name="mic" size={20} color={iconConfig.color} />
+              <Ionicons name="pulse" size={20} color={iconConfig.color} />
             </Animated.View>
           ) : (
             <Ionicons name={iconConfig.name} size={20} color={iconConfig.color} />
@@ -324,7 +323,6 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontFamily: 'NunitoSans-Regular',
     color: '#333',
-    maxHeight: 100,
     paddingRight: 8,
   },
   iconButton: {
