@@ -323,6 +323,11 @@ export default function SavedRecipesScreen() {
     setServingMultiplier(1);
   };
 
+  // Scale nutrition values based on serving multiplier
+  const scaleNutrition = (value: number, multiplier: number) => {
+    return Math.round(value * multiplier);
+  };
+
   // Save recipe functionality
   const handleSaveRecipe = () => {
     HapticService.buttonPress();
@@ -1148,6 +1153,11 @@ export default function SavedRecipesScreen() {
                 </View>
                 
                 <View style={[styles.modalDetails, styles.detailsWithBackground]}>
+                  {/* Quick Facts Label */}
+                  <View style={styles.quickFactsLabel}>
+                    <Text style={styles.quickFactsLabelText}>Quick Facts</Text>
+                  </View>
+                  
                   <View style={styles.modalDetailItemLeft}>
                     <Ionicons name="time-outline" size={20} color="#FF6B6B" />
                     <Text style={styles.modalDetailText}>
@@ -1165,6 +1175,25 @@ export default function SavedRecipesScreen() {
                     <Text style={styles.modalDetailText}>
                       {scaleCalories(selectedRecipe.calories || '400 cal', servingMultiplier)}
                     </Text>
+                  </View>
+                  
+                  {/* Macronutrients Label */}
+                  <View style={styles.macronutrientsLabel}>
+                    <Text style={styles.macronutrientsLabelText}>Macronutrients</Text>
+                  </View>
+                  
+                  {/* Nutrition Info Row */}
+                  <View style={[styles.modalDetailItemLeft, styles.modalDetailItemSecondRow]}>
+                    <Ionicons name="barbell-outline" size={20} color="#FF6B6B" />
+                    <Text style={styles.modalDetailText}>{scaleNutrition(24, servingMultiplier)}g Protein</Text>
+                  </View>
+                  <View style={[styles.modalDetailItemCenter, styles.modalDetailItemSecondRow]}>
+                    <Ionicons name="leaf-outline" size={20} color="#FF6B6B" />
+                    <Text style={styles.modalDetailText}>{scaleNutrition(45, servingMultiplier)}g Carbs</Text>
+                  </View>
+                  <View style={[styles.modalDetailItemRight, styles.modalDetailItemSecondRow]}>
+                    <Ionicons name="water-outline" size={20} color="#FF6B6B" />
+                    <Text style={styles.modalDetailText}>{scaleNutrition(12, servingMultiplier)}g Fats</Text>
                   </View>
                 </View>
                 
@@ -1235,9 +1264,12 @@ export default function SavedRecipesScreen() {
                 <View style={[styles.section, styles.sectionWithBackground]}>
                   <Text style={styles.sectionTitle}>Ingredients</Text>
                   {selectedRecipe.ingredients?.map((ingredient: string, index: number) => (
-                    <Text key={index} style={styles.ingredientText}>
-                      • {scaleIngredientQuantity(ingredient, servingMultiplier)}
-                    </Text>
+                    <View key={index} style={styles.ingredientItem}>
+                      <View style={styles.ingredientBullet} />
+                      <Text style={styles.ingredientText}>
+                        {scaleIngredientQuantity(ingredient, servingMultiplier)}
+                      </Text>
+                    </View>
                   ))}
                 </View>
                 
@@ -1245,26 +1277,22 @@ export default function SavedRecipesScreen() {
                 <View style={[styles.section, styles.sectionWithBackground]}>
                   <Text style={styles.sectionTitle}>Instructions</Text>
                   {selectedRecipe.instructions?.map((instruction: string, index: number) => {
-                    // Check if instruction already has step formatting to avoid duplication
+                    // Clean up instruction text by removing step formatting
                     const cleanInstruction = instruction.trim();
                     
-                    // Check for patterns like "1. Step 1:" or "Step 1:" and clean them up
+                    // Remove patterns like "1. Step 1:" or "Step 1:" to avoid duplication
                     const stepPattern = /^(\d+\.\s*)?Step\s*\d+[.:]?\s*/i;
-                    const hasStepPattern = stepPattern.test(cleanInstruction);
-                    
-                    let displayText;
-                    if (hasStepPattern) {
-                      // Remove the number prefix if it exists (like "1. ") and keep just "Step X:"
-                      displayText = cleanInstruction.replace(/^\d+\.\s*/, '');
-                    } else {
-                      // Add step formatting if it doesn't exist
-                      displayText = `Step ${index + 1}. ${cleanInstruction}`;
-                    }
+                    const displayText = cleanInstruction.replace(stepPattern, '');
                     
                     return (
-                      <Text key={index} style={styles.instructionText}>
-                        {displayText}
-                      </Text>
+                      <View key={index} style={styles.instructionItem}>
+                        <View style={styles.stepNumber}>
+                          <Text style={styles.stepNumberText}>{index + 1}</Text>
+                        </View>
+                        <Text style={styles.instructionText}>
+                          {displayText}
+                        </Text>
+                      </View>
                     );
                   })}
                 </View>
@@ -1906,6 +1934,7 @@ const styles = StyleSheet.create({
   },
   modalDetails: {
     flexDirection: 'row',
+    flexWrap: 'wrap',
     justifyContent: 'space-between',
     marginBottom: 30,
   },
@@ -1968,22 +1997,49 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
-    flex: 1,
+    width: '33.33%',
+    marginBottom: 12,
     justifyContent: 'flex-start',
   },
   modalDetailItemCenter: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
-    flex: 1,
+    width: '33.33%',
+    marginBottom: 12,
     justifyContent: 'center',
   },
   modalDetailItemRight: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
-    flex: 1,
+    width: '33.33%',
+    marginBottom: 12,
     justifyContent: 'flex-end',
+  },
+  modalDetailItemSecondRow: {
+    marginTop: 4,
+  },
+  macronutrientsLabel: {
+    width: '100%',
+    alignItems: 'flex-start',
+    marginTop: 8,
+    marginBottom: 4,
+  },
+  macronutrientsLabelText: {
+    fontSize: 16,
+    fontFamily: 'Recoleta-Bold',
+    color: '#333',
+  },
+  quickFactsLabel: {
+    width: '100%',
+    alignItems: 'flex-start',
+    marginBottom: 4,
+  },
+  quickFactsLabelText: {
+    fontSize: 16,
+    fontFamily: 'Recoleta-Bold',
+    color: '#333',
   },
   modalDetailText: {
     fontSize: 14,
@@ -2003,13 +2059,46 @@ const styles = StyleSheet.create({
     color: '#333333',
     marginBottom: 12,
   },
+  ingredientItem: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    marginBottom: 8,
+  },
+  ingredientBullet: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: '#FF6B6B', // Coral orange color
+    marginTop: 8,
+    marginRight: 12,
+  },
   ingredientText: {
     fontSize: 16,
     lineHeight: 24,
     fontWeight: '400',
     fontFamily: 'NunitoSans-Regular',
     color: '#333333',
-    marginBottom: 8,
+    flex: 1,
+  },
+  instructionItem: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    marginBottom: 20,
+  },
+  stepNumber: {
+    width: 30,
+    height: 30,
+    borderRadius: 15,
+    backgroundColor: '#FF6B6B', // Coral orange color
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 15,
+  },
+  stepNumberText: {
+    fontSize: 14,
+    fontWeight: 'bold',
+    fontFamily: 'NunitoSans-Bold',
+    color: '#fff',
   },
   instructionText: {
     fontSize: 16,
@@ -2017,7 +2106,7 @@ const styles = StyleSheet.create({
     fontWeight: '400',
     fontFamily: 'NunitoSans-Regular',
     color: '#333333',
-    marginBottom: 12,
+    flex: 1,
   },
   // Missing ingredients styles
   section: {

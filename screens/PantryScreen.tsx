@@ -242,14 +242,14 @@ export default function PantryScreen() {
               // Trigger haptic feedback for successful addition
               HapticService.buttonPress();
             }}
-            placeholder="Add ingredients to your pantry..."
+            placeholder="Add ingredients..."
           />
         </View>
 
         {pantryItems.length > 0 ? (
           <View style={styles.pantrySection}>
             <View style={styles.pantrySectionHeader}>
-              <Text style={styles.sectionTitle}>Your Pantry Items</Text>
+              <Text style={styles.sectionTitle}>My Pantry</Text>
               <TouchableOpacity
                 style={styles.clearAllButton}
                 onPress={() => {
@@ -405,11 +405,11 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   sectionTitle: {
-    fontSize: 22,
-    lineHeight: 28,
-    fontWeight: '500',
-    fontFamily: 'NunitoSans-Medium',
-    color: '#333333',
+    fontSize: 24,
+    lineHeight: 30,
+    fontWeight: 'bold',
+    fontFamily: 'Recoleta-Bold',
+    color: '#FF6B6B',
   },
   clearAllButton: {
     backgroundColor: '#FF6B6B',

@@ -222,19 +222,43 @@ function SwipeCard({
               <View style={styles.recipeOverlay}>
                 <Text style={styles.recipeTitle}>{recipe.title}</Text>
                 <View style={styles.recipeMeta}>
+                  {/* Quick Facts Label */}
+                  <View style={styles.quickFactsLabel}>
+                    <Text style={styles.quickFactsLabelText}>Quick Facts</Text>
+                  </View>
+                  
                   <View style={[styles.metaItem, styles.metaItemLeft]}>
                     <Ionicons name="time-outline" size={16} color="#fff" />
                     <Text style={styles.metaText}>{recipe.cookTime}</Text>
-              </View>
+                  </View>
                   <View style={[styles.metaItem, styles.metaItemCenter]}>
                     <Ionicons name="trending-up-outline" size={16} color="#fff" />
                     <Text style={styles.metaText}>{recipe.difficulty}</Text>
-              </View>
+                  </View>
                   <View style={[styles.metaItem, styles.metaItemRight]}>
                     <Ionicons name="flame-outline" size={16} color="#fff" />
                     <Text style={styles.metaText}>{recipe.calories}</Text>
+                  </View>
+                  
+                  {/* Macronutrients Label */}
+                  <View style={styles.macronutrientsLabel}>
+                    <Text style={styles.macronutrientsLabelText}>Macronutrients</Text>
+                  </View>
+                  
+                  {/* Nutrition Info Row */}
+                  <View style={[styles.metaItem, styles.metaItemLeft, styles.metaItemSecondRow]}>
+                    <Ionicons name="barbell-outline" size={16} color="#fff" />
+                    <Text style={styles.metaText}>24g Protein</Text>
+                  </View>
+                  <View style={[styles.metaItem, styles.metaItemCenter, styles.metaItemSecondRow]}>
+                    <Ionicons name="leaf-outline" size={16} color="#fff" />
+                    <Text style={styles.metaText}>45g Carbs</Text>
+                  </View>
+                  <View style={[styles.metaItem, styles.metaItemRight, styles.metaItemSecondRow]}>
+                    <Ionicons name="water-outline" size={16} color="#fff" />
+                    <Text style={styles.metaText}>12g Fats</Text>
+                  </View>
                 </View>
-            </View>
               </View>
 
         {/* Save Button */}
@@ -355,7 +379,7 @@ export default function RecipeFeedScreen() {
     if (currentRecipe) {
       Alert.alert(
         currentRecipe.title,
-        `${currentRecipe.description}\n\nCook Time: ${currentRecipe.cookTime}\nDifficulty: ${currentRecipe.difficulty}\nCalories: ${currentRecipe.calories}`,
+        `${currentRecipe.description}\n\nQuick Facts:\nCook Time: ${currentRecipe.cookTime}\nDifficulty: ${currentRecipe.difficulty}\nCalories: ${currentRecipe.calories}\n\nMacronutrients:\nProtein: 24g\nCarbs: 45g\nFats: 12g`,
         [{ text: 'OK' }]
       );
     }
@@ -534,26 +558,50 @@ const styles = StyleSheet.create({
   },
   recipeMeta: {
     flexDirection: 'row',
+    flexWrap: 'wrap',
     justifyContent: 'space-between',
     alignItems: 'center',
   },
   metaItem: {
     flexDirection: 'row',
     alignItems: 'center',
+    width: '33.33%',
+    marginBottom: 8,
   },
   metaItemLeft: {
-    flex: 1,
     justifyContent: 'flex-start',
   },
   metaItemCenter: {
-    flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
   },
   metaItemRight: {
-    flex: 1,
     justifyContent: 'flex-end',
     alignItems: 'flex-end',
+  },
+  metaItemSecondRow: {
+    marginTop: 4,
+  },
+  macronutrientsLabel: {
+    width: '100%',
+    alignItems: 'flex-start',
+    marginTop: 8,
+    marginBottom: 4,
+  },
+  macronutrientsLabelText: {
+    fontSize: 16,
+    fontFamily: 'NunitoSans-Medium',
+    color: '#fff',
+  },
+  quickFactsLabel: {
+    width: '100%',
+    alignItems: 'flex-start',
+    marginBottom: 4,
+  },
+  quickFactsLabelText: {
+    fontSize: 16,
+    fontFamily: 'NunitoSans-Medium',
+    color: '#fff',
   },
   metaText: {
     fontSize: 16,

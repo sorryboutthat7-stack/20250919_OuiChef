@@ -74,6 +74,22 @@ export default function RecipeDetailScreen({ route, navigation }: RecipeDetailSc
             <Text style={styles.metaText}>{recipe.calories}</Text>
           </View>
         </View>
+
+        {/* Nutrition Info */}
+        <View style={styles.nutritionContainer}>
+          <View style={[styles.nutritionItem, styles.nutritionItemLeft]}>
+            <Ionicons name="fitness-outline" size={20} color="#FF6B6B" />
+            <Text style={styles.nutritionText}>24g Protein</Text>
+          </View>
+          <View style={[styles.nutritionItem, styles.nutritionItemCenter]}>
+            <Ionicons name="leaf-outline" size={20} color="#FF6B6B" />
+            <Text style={styles.nutritionText}>45g Carbs</Text>
+          </View>
+          <View style={[styles.nutritionItem, styles.nutritionItemRight]}>
+            <Ionicons name="water-outline" size={20} color="#FF6B6B" />
+            <Text style={styles.nutritionText}>12g Fats</Text>
+          </View>
+        </View>
       </View>
 
       {/* Ingredients Section */}
@@ -195,6 +211,38 @@ const styles = StyleSheet.create({
     alignItems: 'flex-end',
   },
   metaText: {
+    fontSize: 14,
+    fontWeight: '500',
+    fontFamily: 'NunitoSans-Medium',
+    color: '#333',
+    marginLeft: 8,
+  },
+  nutritionContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginTop: 15,
+    paddingTop: 15,
+    borderTopWidth: 1,
+    borderTopColor: '#f0f0f0',
+  },
+  nutritionItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+  },
+  nutritionItemLeft: {
+    justifyContent: 'flex-start',
+  },
+  nutritionItemCenter: {
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  nutritionItemRight: {
+    justifyContent: 'flex-end',
+    alignItems: 'flex-end',
+  },
+  nutritionText: {
     fontSize: 14,
     fontWeight: '500',
     fontFamily: 'NunitoSans-Medium',

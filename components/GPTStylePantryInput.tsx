@@ -22,7 +22,7 @@ interface GPTStylePantryInputProps {
 
 const GPTStylePantryInput: React.FC<GPTStylePantryInputProps> = ({
   onIngredientsAdded,
-  placeholder = "Add ingredients to your pantry...",
+  placeholder = "Add ingredients...",
 }) => {
   const [inputText, setInputText] = useState('');
   const [isListening, setIsListening] = useState(false);
@@ -209,19 +209,19 @@ const GPTStylePantryInput: React.FC<GPTStylePantryInputProps> = ({
     if (isListening) {
       return {
         name: 'stop' as const,
-        color: '#FF6B6B',
+        color: '#fff',
         animated: true,
       };
     } else if (isTyping) {
       return {
         name: 'arrow-up' as const,
-        color: '#FF6B6B',
+        color: '#fff',
         animated: false,
       };
     } else {
       return {
         name: 'mic' as const,
-        color: '#999',
+        color: '#fff',
         animated: false,
       };
     }
@@ -305,17 +305,17 @@ const GPTStylePantryInput: React.FC<GPTStylePantryInputProps> = ({
 
 const styles = StyleSheet.create({
   container: {
-    marginHorizontal: 16,
+    marginHorizontal: 0,
     marginVertical: 8,
   },
   inputContainer: {
     flexDirection: 'row',
-    alignItems: 'flex-end',
+    alignItems: 'center',
     backgroundColor: '#f5f5f5',
     borderRadius: 24,
     paddingHorizontal: 16,
-    paddingVertical: 12,
-    minHeight: 48,
+    paddingVertical: 8,
+    minHeight: 40,
     borderWidth: 1,
     borderColor: '#e0e0e0',
   },
@@ -331,7 +331,7 @@ const styles = StyleSheet.create({
     width: 32,
     height: 32,
     borderRadius: 16,
-    backgroundColor: '#fff',
+    backgroundColor: '#FF6B6B',
     justifyContent: 'center',
     alignItems: 'center',
     shadowColor: '#000',
